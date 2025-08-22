@@ -1,0 +1,163 @@
+/* Глабальныя рэсэты */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+  padding: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 10px auto;
+}
+
+body {
+  font-size: 18px;
+  line-height: 1.6;
+  font-family: sans-serif;
+  scroll-behavior: smooth;
+  margin: 0;
+}
+
+.container {
+  width: 85%;
+  margin: 25px auto 0;
+}
+
+.back-btn {
+  color: blue;
+  position: absolute;
+  padding: 0;
+  margin: -20px 0 0 5px;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  padding-bottom: 15px;
+}
+
+.list {
+  margin: 0 auto;
+  max-width: 1000px;
+  padding: 0 10px;
+}
+
+.button {
+  display: flex;
+  gap: 25px;
+  border: 1px solid #000;
+  border-radius: 4px;
+  margin: 10px 0;
+  padding: 15px;
+}
+
+.img-container {
+  flex-shrink: 0;
+  padding: 0 10px 0 15px;
+}
+
+.btn-img {
+  width: 85px;
+  height: 85;
+}
+
+.txt-container {
+  flex: 1;
+}
+
+.btn-num {
+  font-size: 24px;
+  margin: 20px 0 5px;
+}
+
+.btn-title {
+  text-transform: uppercase;
+  font-size: 22px;
+  margin: 10px 0;
+}
+
+/* стылі старонак экспанатаў */
+
+.exb-name {
+  text-align: center;
+  font-size: 24px;
+  margin: 0 0 10px;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.exb-info {
+  /* display: none; */
+  text-align: center;
+  color: gray;
+  margin: 10px 0;
+}
+
+.exb-img {
+  width: 85%;
+  text-align: center;
+}
+
+.exb-audio {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin: 10px auto;
+}
+
+.exb-text {
+  width: 80%;
+  font-size: 20px;
+  margin: 30px auto;
+}
+
+/* Адаптыўнасць */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  .button {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .btn-img {
+    width: 60px;
+  }
+
+  .txt-container {
+    padding: 0;
+  }
+
+  .btn-num {
+    margin: 0;
+  }
+}
