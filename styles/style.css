@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
 /* Глабальныя рэсэты */
 *,
 *::before,
@@ -36,7 +38,7 @@ img {
 body {
   font-size: 18px;
   line-height: 1.6;
-  font-family: sans-serif;
+  font-family: "Roboto", sans-serif;
   scroll-behavior: smooth;
   margin: 0;
 }
@@ -69,6 +71,7 @@ body {
 
 .button {
   display: flex;
+  align-items: center;
   gap: 25px;
   border: 1px solid #000;
   border-radius: 4px;
@@ -84,6 +87,7 @@ body {
 .btn-img {
   width: 85px;
   height: 85;
+  border-radius: 5px;
 }
 
 .txt-container {
@@ -92,13 +96,12 @@ body {
 
 .btn-num {
   font-size: 24px;
-  margin: 20px 0 5px;
+  margin-top: 10px;
 }
 
 .btn-title {
   text-transform: uppercase;
   font-size: 22px;
-  margin: 10px 0;
 }
 
 /* стылі старонак экспанатаў */
@@ -108,24 +111,23 @@ body {
   font-size: 24px;
   margin: 0 0 10px;
   font-weight: bold;
-  font-style: italic;
 }
 
 .exb-info {
-  /* display: none; */
   text-align: center;
   color: gray;
   margin: 10px 0;
 }
 
 .exb-img {
-  width: 85%;
+  width: 70%;
   text-align: center;
+  border-radius: 25px;
 }
 
 .exb-audio {
   display: block;
-  width: 100%;
+  width: 80%;
   text-align: center;
   margin: 10px auto;
 }
@@ -133,31 +135,14 @@ body {
 .exb-text {
   width: 80%;
   font-size: 20px;
-  margin: 30px auto;
+  margin: 10px auto;
+}
+
+.exb-text-verse {
+  text-align: center;
 }
 
 /* Адаптыўнасць */
 @media (max-width: 768px) {
-  body {
-    font-size: 14px;
-  }
-
-  .button {
-    flex-direction: column;
-    text-align: center;
-    align-items: center;
-    gap: 15px;
-  }
-
-  .btn-img {
-    width: 60px;
-  }
-
-  .txt-container {
-    padding: 0;
-  }
-
-  .btn-num {
-    margin: 0;
-  }
+  /* display: none; */
 }
