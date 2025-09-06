@@ -8,36 +8,59 @@
 </head>
 
 <body>
-    <div id="exhibit"></div>
+    <div id="container" class="container"></div>
 
     <script>
         async function loadExhibit(section, id) {
-            const response = await fetch('catalog.json');
-            const data = await response.json();
+            try {
+                const response = await fetch('catalog.json');
+                const data = await response.json();
 
-            const exhibit = data.find(e => e.section === section && e.id === String(id));
-            if (!exhibit) {
-                document.getElementById('exhibit').innerHTML = '<p>Экспанат не знойдзены.</p>';
-                return;
+                // шукаем экспанат, прыводзячы id да радка
+                const exhibit = data.find(e => e.section === section && String(e.id) === String(id));
+
+                if (!exhibit) {
+                    document.getElementById('container').innerHTML = '<p>Экспанат не знойдзены.</p>';
+                    return;
+                }
+
+                // калі няма info, хаваем гэты блок
+                const infoBlock = exhibit.info ? `<p class="exb-info">${exhibit.info}</p>` : "";
+
+                // калі няма img або пусты масіў, проста не паказваем <img>
+                let imgBlock = "";
+                if (exhibit.img && exhibit.img.length && exhibit.img !== "[]") {
+                    const imgs = Array.isArray(exhibit.img) ? exhibit.img : [exhibit.img];
+                    imgBlock = imgs.map(src => `<img src="../${src}" alt="Фота экспаната" class="exb-img">`).join("");
+                }
+
+                // калі няма аўдыё, таксама нічога не паказваем
+                const audioBlock = exhibit.audio ?
+                    `<audio src="../${exhibit.audio}" type="audio/mpeg" class="exb-audio" controls></audio>` : "";
+
+                document.getElementById('container').innerHTML = `
+                    <h3 class="exb-name">${exhibit.title}</h3>
+                    ${infoBlock}
+                    ${imgBlock}
+                    ${audioBlock}
+                    <p class="exb-text">${exhibit.text}</p>
+                `;
+            } catch (err) {
+                document.getElementById('container').innerHTML = '<p>Памылка загрузкі экспаната.</p>';
+                console.error(err);
             }
-
-            document.getElementById('exhibit').innerHTML = `
-        <h3 class="exb-name">${exhibit.title}</h3>
-        <p class="exb-info">${exhibit.info}</p>
-        <img src="../${exhibit.img[0]}" alt="Фота экспаната" class="exb-img" style="width: 60%;">
-        <audio src="../${exhibit.audio}" type="audio/mpeg" class="exb-audio" controls></audio>
-        <p class="exb-text">${exhibit.text}</p>`;
         }
 
-        // прыклад: загружаем экспанат з секцыі s1, id=1
+        // чытаем параметры з URL
         const params = new URLSearchParams(window.location.search);
         const section = params.get("section");
         const id = params.get("id");
 
         if (section && id) {
             loadExhibit(section, id);
+        } else {
+            document.getElementById('container').innerHTML = '<p>Не зададзены параметры section і id.</p>';
         }
-
     </script>
 </body>
 
