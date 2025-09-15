@@ -31,7 +31,7 @@ p {
 img {
   display: block;
   max-width: 100%;
-  height: auto;
+  height: auto;         /* галоўнае: прапорцыі захоўваюцца */
   margin: 10px auto;
 }
 
@@ -86,7 +86,7 @@ body {
 
 .btn-img {
   width: 85px;
-  height: 85;
+  height: auto;        /* было height: 85; → выкідваем, каб не крывіла */
   border-radius: 5px;
 }
 
@@ -105,7 +105,6 @@ body {
 }
 
 /* стылі старонак экспанатаў */
-
 .exb-name {
   text-align: center;
   font-size: 24px;
@@ -120,8 +119,10 @@ body {
 }
 
 .exb-img {
-  width: 35%;
-  text-align: center;
+  max-width: 60%;      /* шырыня абмежаваная, але вышыня аўтаматычная */
+  height: auto;
+  margin: 10px auto;
+  display: block;
   border-radius: 25px;
 }
 
@@ -142,7 +143,70 @@ body {
   text-align: center;
 }
 
+/* --- СТЫЛІ ДЛЯ КАРУСЕЛІ --- */
+.carousel {
+  position: relative;
+  width: 60%;
+  margin: 0 auto 20px auto;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.4s ease-in-out;
+}
+
+.carousel-slide {
+  min-width: 100%;
+  user-select: none;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: auto;        /* тут таксама захоўваем прапорцыі */
+  display: block;
+  border-radius: 12px;
+}
+
+.carousel-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  color: white;
+  font-size: 24px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.carousel-button.prev { left: 10px; }
+.carousel-button.next { right: 10px; }
+
+.carousel-dots {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.carousel-dots .dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin: 0 5px;
+  background: #bbb;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.carousel-dots .dot.active {
+  background: #333;
+}
+
 /* Адаптыўнасць */
 @media (max-width: 768px) {
-  /* display: none; */
+  .carousel { width: 90%; }
+  .exb-img { max-width: 80%; }
+  .exb-text { width: 95%; }
 }

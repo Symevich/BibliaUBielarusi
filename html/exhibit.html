@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="be">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Экспанат</title>
+  <link rel="stylesheet" href="../../styles/style.css">
+</head>
+
+<body>
+  <a id="back-link" class="back-btn">&lt; Назад у секцыю</a>
+  <div id="container" class="container"></div>
+
+  <script>
+    async function loadExhibit(section, id) {
+      try {
+        const response = await fetch('catalog.json');
+        const data = await response.json();
+
+        const exhibit = data.find(e => e.section === section && String(e.id) === String(id));
+
+        if (!exhibit) {
+          document.getElementById('container').innerHTML = '<p>Экспанат не знойдзены.</p>';
+          return;
+        }
+
+        const infoBlock = exhibit.info ? `<p class="exb-info">${exhibit.info}</p>` : "";
+
+        let imgBlock = "";
+        if (exhibit.img && exhibit.img.length && exhibit.img !== "[]") {
+          const imgs = Array.isArray(exhibit.img) ? exhibit.img : [exhibit.img];
+          if (imgs.length > 1) {
+            imgBlock = `
+              <div class="carousel">
+                <div class="carousel-track">
+                  ${imgs.map(src => `<div class="carousel-slide"><img src="../${src}" alt="Фота экспаната"></div>`).join("")}
+                </div>
+                <button class="carousel-button prev">&#10094;</button>
+                <button class="carousel-button next">&#10095;</button>
+                <div class="carousel-dots">
+                  ${imgs.map((_, i) => `<span class="dot${i === 0 ? ' active' : ''}"></span>`).join("")}
+                </div>
+              </div>
+            `;
+          } else {
+            imgBlock = `<img src="../${imgs[0]}" alt="Фота экспаната" class="exb-img">`;
+          }
+        }
+
+        const audioBlock = exhibit.audio ?
+          `<audio src="../${exhibit.audio}" type="audio/mpeg" class="exb-audio" controls></audio>` : "";
+
+        document.getElementById('container').innerHTML = `
+          <h3 class="exb-name">${exhibit.title}</h3>
+          ${infoBlock}
+          ${imgBlock}
+          ${audioBlock}
+          <p class="exb-text">${exhibit.text}</p>
+        `;
+
+        initCarousel();
+      } catch (err) {
+        document.getElementById('container').innerHTML = '<p>Памылка загрузкі экспаната.</p>';
+        console.error(err);
+      }
+    }
+
+    function initCarousel() {
+      const track = document.querySelector('.carousel-track');
+      if (!track) return;
+
+      const slides = Array.from(track.children);
+      const nextButton = document.querySelector('.carousel-button.next');
+      const prevButton = document.querySelector('.carousel-button.prev');
+      const dotsNav = document.querySelector('.carousel-dots');
+      const dots = dotsNav ? Array.from(dotsNav.children) : [];
+
+      let currentIndex = 0;
+
+      function updateCarousel(index) {
+        track.style.transform = `translateX(-${index * 100}%)`;
+        dots.forEach(dot => dot.classList.remove('active'));
+        if (dots[index]) dots[index].classList.add('active');
+        currentIndex = index;
+      }
+
+      if (nextButton) {
+        nextButton.addEventListener('click', () => {
+          const newIndex = (currentIndex + 1) % slides.length;
+          updateCarousel(newIndex);
+        });
+      }
+
+      if (prevButton) {
+        prevButton.addEventListener('click', () => {
+          const newIndex = (currentIndex - 1 + slides.length) % slides.length;
+          updateCarousel(newIndex);
+        });
+      }
+
+      if (dotsNav) {
+        dotsNav.addEventListener('click', e => {
+          if (e.target.classList.contains('dot')) {
+            const index = dots.indexOf(e.target);
+            updateCarousel(index);
+          }
+        });
+      }
+
+      updateCarousel(0);
+    }
+
+    // чытаем параметры з URL
+    const params = new URLSearchParams(window.location.search);
+    const section = params.get("section");
+    const id = params.get("id");
+
+    // усталёўваем спасылку «Назад у секцыю»
+    if (section) {
+      document.getElementById('back-link').setAttribute('href', `section.html?section=${section}`);
+    } else {
+      document.getElementById('back-link').style.display = "none";
+    }
+
+    if (section && id) {
+      loadExhibit(section, id);
+    } else {
+      document.getElementById('container').innerHTML = '<p>Не зададзены параметры section і id.</p>';
+    }
+  </script>
+</body>
+</html>
