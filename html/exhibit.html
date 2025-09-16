@@ -8,8 +8,9 @@
   <link rel="stylesheet" href="../styles/style.css">
 </head>
 
+
 <body>
-  <a id="back-link" class="back-btn">&lt; Назад у секцыю</a>
+  <div id="back-container"></div>
   <div id="container" class="container"></div>
 
   <script>
@@ -25,8 +26,19 @@
           return;
         }
 
+        // генеруем кнопку "Назад"
+        let backBtnHTML = "";
+        if (section === "0" && String(id) === "0") {
+          backBtnHTML = `<a href="../index.html" class="back-btn">&lt; Выбар секцый</a>`;
+        } else {
+          backBtnHTML = `<a href="./section.html?section=${section}" class="back-btn">&lt; Назад у секцыю</a>`;
+        }
+        document.getElementById("back-container").innerHTML = backBtnHTML;
+
+        // info
         const infoBlock = exhibit.info ? `<p class="exb-info">${exhibit.info}</p>` : "";
 
+        // images
         let imgBlock = "";
         if (exhibit.img && exhibit.img.length && exhibit.img !== "[]") {
           const imgs = Array.isArray(exhibit.img) ? exhibit.img : [exhibit.img];
@@ -48,15 +60,17 @@
           }
         }
 
+        // audio
         const audioBlock = exhibit.audio ?
           `<audio src="../${exhibit.audio}" type="audio/mpeg" class="exb-audio" controls></audio>` : "";
 
+        // content
         document.getElementById('container').innerHTML = `
           <h3 class="exb-name">${exhibit.title}</h3>
           ${infoBlock}
           ${imgBlock}
           ${audioBlock}
-          <p class="exb-text">${exhibit.text}</p>
+          <div class="exb-text">${exhibit.text}</div>
         `;
 
         initCarousel();
@@ -115,13 +129,6 @@
     const params = new URLSearchParams(window.location.search);
     const section = params.get("section");
     const id = params.get("id");
-
-    // усталёўваем спасылку «Назад у секцыю»
-    if (section) {
-      document.getElementById('back-link').setAttribute('href', `section.html?section=${section}`);
-    } else {
-      document.getElementById('back-link').style.display = "none";
-    }
 
     if (section && id) {
       loadExhibit(section, id);

@@ -1,69 +1,92 @@
 <!DOCTYPE html>
 <html lang="be">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Секцыя</title>
-  <link rel="stylesheet" href="../styles/normalize.css">
-  <link rel="stylesheet" href="../styles/style.css">
-</head>
-<body>
-  <a href="../index.html" class="back-btn">&lt; Выбар секцый</a>
-  <div class="container">
-    <h1 class="page-title" id="section-title"></h1>
-    <ul class="list" id="exhibit-list"></ul>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Секцыя</title>
+    <link rel="stylesheet" href="../styles/normalize.css" />
+    <link rel="stylesheet" href="../styles/style.css" />
+  </head>
+  <body>
+    <a href="../index.html" class="back-btn">&lt; Выбар секцый</a>
+    <div class="container">
+      <h1 class="page-title" id="section-title"></h1>
+      <ul class="list" id="exhibit-list"></ul>
+    </div>
 
-  <script>
-    async function loadSection(section) {
-      try {
-        const response = await fetch('catalog.json');
-        const data = await response.json();
+    <script>
+      async function loadSection(section) {
+        try {
+          const response = await fetch("catalog.json");
+          const data = await response.json();
 
-        const exhibits = data.filter(e => String(e.section) === String(section));
+          const exhibits = data.filter(
+            (e) => String(e.section) === String(section)
+          );
 
-        if (!exhibits.length) {
-          document.getElementById('section-title').textContent = "Секцыя " + section;
-          document.getElementById('exhibit-list').innerHTML = '<p>У гэтай секцыі няма экспанатаў.</p>';
-          return;
+          if (!exhibits.length) {
+            document.getElementById("section-title").textContent =
+              "Секцыя " + section;
+            document.getElementById("exhibit-list").innerHTML =
+              "<p>У гэтай секцыі няма экспанатаў.</p>";
+            return;
+          }
+
+          document.getElementById("section-title").textContent =
+            "Секцыя " + section;
+
+          const listHtml = exhibits
+            .map((e) => {
+              let numBlock = "";
+
+              if (typeof e.id === "string" && e.id.startsWith("intro_")) {
+                numBlock = `<h3 class="btn-num">Прадмова</h3>`;
+              } else {
+                numBlock = `<h3 class="btn-num">Экспанат ${e.id}</h3>`;
+              }
+
+              return `
+   <li>
+      <a href="exhibit.html?section=${e.section}&id=${e.id}" class="button">
+        <div class="img-container">
+          ${
+            Array.isArray(e.img)
+              ? `<img src="${e.img[0]}" alt="Іконка экспаната" class="btn-img">`
+              : e.img
+              ? `<img src="${e.img}" alt="Іконка экспаната" class="btn-img">`
+              : ""
+          }
+        </div>
+        <div class="txt-container">
+          ${numBlock}
+          <p class="btn-title">${e.title}</p>
+        </div>
+      </a>
+    </li>
+  `;
+            })
+            .join("");
+
+          document.getElementById("exhibit-list").innerHTML = listHtml;
+        } catch (err) {
+          document.getElementById("section-title").textContent = "Памылка";
+          document.getElementById("exhibit-list").innerHTML =
+            "<p>Не атрымалася загрузіць экспанаты.</p>";
+          console.error(err);
         }
-
-        document.getElementById('section-title').textContent = "Секцыя " + section;
-
-        const listHtml = exhibits.map(e => `
-          <li>
-            <a href="exhibit.html?section=${e.section}&id=${e.id}" class="button">
-              <div class="img-container">
-                ${Array.isArray(e.img) ? 
-                  `<img src="../${e.img[0]}" alt="Іконка экспаната" class="btn-img">` : 
-                  (e.img ? `<img src="../${e.img}" alt="Іконка экспаната" class="btn-img">` : "")
-                }
-              </div>
-              <div class="txt-container">
-                <h3 class="btn-num">Экспанат ${e.id}</h3>
-                <p class="btn-title">${e.title}</p>
-              </div>
-            </a>
-          </li>
-        `).join("");
-
-        document.getElementById('exhibit-list').innerHTML = listHtml;
-      } catch (err) {
-        document.getElementById('section-title').textContent = "Памылка";
-        document.getElementById('exhibit-list').innerHTML = '<p>Не атрымалася загрузіць экспанаты.</p>';
-        console.error(err);
       }
-    }
 
-    const params = new URLSearchParams(window.location.search);
-    const section = params.get("section");
+      const params = new URLSearchParams(window.location.search);
+      const section = params.get("section");
 
-    if (section) {
-      loadSection(section);
-    } else {
-      document.getElementById('section-title').textContent = "Не зададзена секцыя";
-      document.getElementById('exhibit-list').innerHTML = '<p>Не заданы параметр section.</p>';
-    }
-  </script>
-</body>
+      if (section) {
+        loadSection(section);
+      } else {
+        document.getElementById("section-title").textContent =
+          "Не зададзена секцыя";
+        document.getElementById("exhibit-list").innerHTML =
+          "<p>Не заданы параметр section.</p>";
+      }
+    </script>
+  </body>
 </html>
