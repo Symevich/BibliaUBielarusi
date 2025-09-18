@@ -40,9 +40,9 @@
               let numBlock = "";
 
               if (typeof e.id === "string" && e.id.startsWith("intro_")) {
-                numBlock = `<h3 class="btn-num">Прадмова</h3>`;
+                numBlock = `<p class="btn-num">Прадмова</p>`;
               } else {
-                numBlock = `<h3 class="btn-num">Экспанат ${e.id}</h3>`;
+                numBlock = `<p class="btn-num">Экспанат ${e.id}</p>`;
               }
 
               return `
@@ -59,7 +59,7 @@
         </div>
         <div class="txt-container">
           ${numBlock}
-          <p class="btn-title">${e.title}</p>
+          <h3 class="btn-title">${e.title}</h3>
         </div>
       </a>
     </li>
