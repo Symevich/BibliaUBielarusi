@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 
-/* Глабальныя рэсэты */
+/* --- Глабальныя рэсэты --- */
 *,
 *::before,
 *::after {
@@ -11,8 +11,6 @@
 
 ul {
   list-style: none;
-  margin: 0;
-  padding: 0;
 }
 
 a {
@@ -31,7 +29,7 @@ p {
 img {
   display: block;
   max-width: 100%;
-  height: auto;         /* галоўнае: прапорцыі захоўваюцца */
+  height: auto;
   margin: 10px auto;
 }
 
@@ -41,20 +39,75 @@ body {
   font-family: "Roboto", sans-serif;
   scroll-behavior: smooth;
   margin: 0;
+  color: #000;
 }
 
+/* --- Кантэйнеры --- */
 .container {
-  width: 85%;
-  margin: 25px auto 0;
+  width: 70%;
+  margin: 0 auto 0;
 }
 
+/* --- Кнопка назад --- */
 .back-btn {
-  color: blue;
-  position: absolute;
-  padding: 0;
-  margin: -20px 0 0 5px;
+  position: relative;
+  top: 10px;
+  left: 10px;
+  color: #0077cc;
+  font-size: 16px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  z-index: 1000;
+  transition: background 0.3s;
+  width: fit-content;
 }
 
+.back-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* --- Welcome старонка --- */
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+  background: linear-gradient(135deg, #f5f5f5, #e6e6e6);
+}
+
+.welcome-title {
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.welcome-subtitle {
+  font-size: 22px;
+  margin-bottom: 40px;
+  color: #555;
+}
+
+.start-btn {
+  display: inline-block;
+  padding: 15px 40px;
+  font-size: 22px;
+  font-weight: bold;
+  color: white;
+  background: #0077cc;
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.3s ease;
+}
+
+.start-btn:hover {
+  background: #005fa3;
+}
+
+/* --- Галоўная і секцыі --- */
 .page-title {
   text-align: center;
   font-size: 24px;
@@ -66,17 +119,22 @@ body {
 .list {
   margin: 0 auto;
   max-width: 1000px;
-  padding: 0 10px;
+
 }
 
 .button {
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: 40px;
   border: 1px solid #000;
   border-radius: 4px;
   margin: 10px 0;
   padding: 15px;
+  transition: background 0.2s;
+}
+
+.button:hover {
+  background: #f7f7f7;
 }
 
 .img-container {
@@ -86,8 +144,9 @@ body {
 
 .btn-img {
   width: 85px;
-  height: auto;        /* было height: 85; → выкідваем, каб не крывіла */
+  height: auto;
   border-radius: 5px;
+  margin-bottom: 10px;
 }
 
 .txt-container {
@@ -96,15 +155,15 @@ body {
 
 .btn-num {
   font-size: 24px;
-  margin-top: 10px;
+
 }
 
 .btn-title {
   text-transform: uppercase;
-  font-size: 22px;
+  font-size: 18px;
 }
 
-/* стылі старонак экспанатаў */
+/* --- Экспанаты --- */
 .exb-name {
   text-align: center;
   font-size: 24px;
@@ -119,7 +178,7 @@ body {
 }
 
 .exb-img {
-  max-width: 60%;      /* шырыня абмежаваная, але вышыня аўтаматычная */
+  max-width: 60%;
   height: auto;
   margin: 10px auto;
   display: block;
@@ -128,9 +187,11 @@ body {
 
 .exb-audio {
   display: block;
-  width: 80%;
-  text-align: center;
-  margin: 10px auto;
+  width: 100%; /* поўная шырыня */
+  max-width: 800px; /* але не больш чым трэба на дэсктопе */
+  margin: 15px auto; /* цэнтраванне */
+  background: transparent; /* прыбіраем шэры фон */
+  border: none;
 }
 
 .exb-text {
@@ -141,8 +202,7 @@ body {
 }
 
 .exb-text p {
-  margin-bottom: 10px; /* невялікі водступ паміж абзацамі */
-  text-indent: 0px;   /* калі хочаш чырвоную радок */
+  margin-bottom: 15px;
 }
 
 .exb-text-citate {
@@ -153,7 +213,7 @@ body {
   text-align: center;
 }
 
-/* --- СТЫЛІ ДЛЯ КАРУСЕЛІ --- */
+/* --- Карусель --- */
 .carousel {
   position: relative;
   width: 60%;
@@ -174,7 +234,7 @@ body {
 
 .carousel-slide img {
   width: 100%;
-  height: auto;        /* тут таксама захоўваем прапорцыі */
+  height: auto;
   display: block;
   border-radius: 12px;
 }
@@ -191,10 +251,12 @@ body {
   cursor: pointer;
   border-radius: 50%;
 }
-
-.carousel-button.prev { left: 10px; }
-.carousel-button.next { right: 10px; }
-
+.carousel-button.prev {
+  left: 10px;
+}
+.carousel-button.next {
+  right: 10px;
+}
 .carousel-dots {
   text-align: center;
   margin-top: 10px;
@@ -214,9 +276,75 @@ body {
   background: #333;
 }
 
-/* Адаптыўнасць */
+/* --- Адаптыўнасць --- */
+/* --- Адаптыўнасць --- */
 @media (max-width: 768px) {
-  .carousel { width: 90%; }
-  .exb-img { max-width: 80%; }
-  .exb-text { width: 95%; }
+  body {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .container {
+    width: 100%;
+    padding: 15px;
+  }
+
+  /* карусель і фота */
+  .carousel {
+    width: 100%;
+    border-radius: 10px;
+  }
+  .exb-img {
+    max-width: 100%;
+    border-radius: 15px;
+  }
+
+  /* аўдыя */
+  .exb-audio {
+    width: 100%;
+    margin: 15px auto;
+    display: block;
+  }
+
+  /* тэкст */
+  .exb-text {
+    width: 100%;
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 15px auto;
+    text-align: justify;
+  }
+
+  /* кнопка назад */
+  .back-btn {
+    font-size: 14px;
+    padding: 6px 8px;
+    top: 5px;
+    left: 5px;
+  }
+
+  /* кнопкі спіса */
+  .button {
+    /* flex-direction: column;
+    text-align: center; */
+    gap: 15px;
+  }
+
+  .btn-title {
+    font-size: 14px;
+  }
+
+  .btn-num {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 15px;
+  }
+
+  .exb-text {
+    font-size: 15px;
+  }
 }
