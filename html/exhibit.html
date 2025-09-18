@@ -55,7 +55,7 @@
                   ${imgs
                     .map(
                       (src) =>
-                        `<div class="carousel-slide"><img src="../${src}" alt="Фота экспаната"></div>`
+                        `<div class="carousel-slide"><img src="${src}" alt="Фота экспаната"></div>`
                     )
                     .join("")}
                 </div>
@@ -72,13 +72,13 @@
               </div>
             `;
             } else {
-              imgBlock = `<img src="../${imgs[0]}" alt="Фота экспаната" class="exb-img">`;
+              imgBlock = `<img src="${imgs[0]}" alt="Фота экспаната" class="exb-img">`;
             }
           }
 
           // audio
           const audioBlock = exhibit.audio
-            ? `<audio src="../${exhibit.audio}" type="audio/mpeg" class="exb-audio" controls></audio>`
+            ? `<audio src="${exhibit.audio}" type="audio/mpeg" class="exb-audio" controls></audio>`
             : "";
 
           // content
