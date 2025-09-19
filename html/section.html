@@ -20,50 +20,46 @@
           const response = await fetch("catalog.json");
           const data = await response.json();
 
-          const exhibits = data.filter(
-            (e) => String(e.section) === String(section)
-          );
+          const exhibits = data.filter((e) => String(e.section) === String(section));
 
           if (!exhibits.length) {
-            document.getElementById("section-title").textContent =
-              "Секцыя " + section;
+            document.getElementById("section-title").textContent = "Секцыя " + section;
             document.getElementById("exhibit-list").innerHTML =
               "<p>У гэтай секцыі няма экспанатаў.</p>";
             return;
           }
 
-          document.getElementById("section-title").textContent =
-            "Секцыя " + section;
+          document.getElementById("section-title").textContent = "Секцыя " + section;
 
           const listHtml = exhibits
             .map((e) => {
-              let numBlock = "";
+              const isIntro = typeof e.id === "string" && e.id.startsWith("intro_");
+              const numBlock = isIntro
+                ? `<p class="btn-num">Прадмова</p>`
+                : `<p class="btn-num">Экспанат ${e.id}</p>`;
 
-              if (typeof e.id === "string" && e.id.startsWith("intro_")) {
-                numBlock = `<p class="btn-num">Прадмова</p>`;
-              } else {
-                numBlock = `<p class="btn-num">Экспанат ${e.id}</p>`;
-              }
+              const imgs = Array.isArray(e.img) ? e.img : [e.img];
+              const icoImg = imgs.find((src) => src && src.includes("_ico."));
+              const normalImg = imgs.find((src) => src && !src.includes("_ico."));
+              const imgSrc = icoImg || normalImg || "";
 
               return `
-   <li>
-      <a href="exhibit.html?section=${e.section}&id=${e.id}" class="button">
-        <div class="img-container">
-          ${
-            Array.isArray(e.img)
-              ? `<img src="${e.img[0]}" alt="Іконка экспаната" class="btn-img">`
-              : e.img
-              ? `<img src="${e.img}" alt="Іконка экспаната" class="btn-img">`
-              : ""
-          }
-        </div>
-        <div class="txt-container">
-          ${numBlock}
-          <h3 class="btn-title">${e.title}</h3>
-        </div>
-      </a>
-    </li>
-  `;
+                <li>
+                  <a href="exhibit.html?section=${e.section}&id=${e.id}" class="button">
+                    <div class="img-container">
+                      ${
+                        imgSrc
+                          ? `<img src="${imgSrc}" alt="Іконка экспаната" class="btn-img">`
+                          : ""
+                      }
+                    </div>
+                    <div class="txt-container">
+                      ${numBlock}
+                      <h3 class="btn-title">${e.title}</h3>
+                    </div>
+                  </a>
+                </li>
+              `;
             })
             .join("");
 
@@ -82,8 +78,7 @@
       if (section) {
         loadSection(section);
       } else {
-        document.getElementById("section-title").textContent =
-          "Не зададзена секцыя";
+        document.getElementById("section-title").textContent = "Не зададзена секцыя";
         document.getElementById("exhibit-list").innerHTML =
           "<p>Не заданы параметр section.</p>";
       }

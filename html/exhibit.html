@@ -29,12 +29,10 @@
           }
 
           // генеруем кнопку "Назад"
-          let backBtnHTML = "";
-          if (section === "0" && String(id) === "0") {
-            backBtnHTML = `<a href="../index.html" class="back-btn">&lt; Выбар секцый</a>`;
-          } else {
-            backBtnHTML = `<a href="./section.html?section=${section}" class="back-btn">&lt; Назад у секцыю</a>`;
-          }
+          const backBtnHTML =
+            section === "0" && String(id) === "0"
+              ? `<a href="../index.html" class="back-btn">&lt; Выбар секцый</a>`
+              : `<a href="./section.html?section=${section}" class="back-btn">&lt; Назад у секцыю</a>`;
           document.getElementById("back-container").innerHTML = backBtnHTML;
 
           // info
@@ -42,37 +40,37 @@
             ? `<p class="exb-info">${exhibit.info}</p>`
             : "";
 
-          // images
+          // images (без _ico)
           let imgBlock = "";
           if (exhibit.img && exhibit.img.length && exhibit.img !== "[]") {
-            const imgs = Array.isArray(exhibit.img)
-              ? exhibit.img
-              : [exhibit.img];
-            if (imgs.length > 1) {
+            const imgs = Array.isArray(exhibit.img) ? exhibit.img : [exhibit.img];
+            const cleanImgs = imgs.filter((src) => src && !src.includes("_ico."));
+
+            if (cleanImgs.length > 1) {
               imgBlock = `
-              <div class="carousel">
-                <div class="carousel-track">
-                  ${imgs
-                    .map(
-                      (src) =>
-                        `<div class="carousel-slide"><img src="${src}" alt="Фота экспаната"></div>`
-                    )
-                    .join("")}
+                <div class="carousel">
+                  <div class="carousel-track">
+                    ${cleanImgs
+                      .map(
+                        (src) =>
+                          `<div class="carousel-slide"><img src="${src}" alt="Фота экспаната"></div>`
+                      )
+                      .join("")}
+                  </div>
+                  <button class="carousel-button prev">&#10094;</button>
+                  <button class="carousel-button next">&#10095;</button>
+                  <div class="carousel-dots">
+                    ${cleanImgs
+                      .map(
+                        (_, i) =>
+                          `<span class="dot${i === 0 ? " active" : ""}"></span>`
+                      )
+                      .join("")}
+                  </div>
                 </div>
-                <button class="carousel-button prev">&#10094;</button>
-                <button class="carousel-button next">&#10095;</button>
-                <div class="carousel-dots">
-                  ${imgs
-                    .map(
-                      (_, i) =>
-                        `<span class="dot${i === 0 ? " active" : ""}"></span>`
-                    )
-                    .join("")}
-                </div>
-              </div>
-            `;
-            } else {
-              imgBlock = `<img src="${imgs[0]}" alt="Фота экспаната" class="exb-img">`;
+              `;
+            } else if (cleanImgs.length === 1) {
+              imgBlock = `<img src="${cleanImgs[0]}" alt="Фота экспаната" class="exb-img">`;
             }
           }
 
@@ -86,7 +84,7 @@
             <h3 class="exb-name">${exhibit.title}</h3>
             ${infoBlock}
             ${imgBlock}
-            ${audioBlock}     <!-- тут аўдыё -->
+            ${audioBlock}
             <div class="exb-text">${exhibit.text}</div>
           `;
 
