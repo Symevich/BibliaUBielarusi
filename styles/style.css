@@ -75,7 +75,7 @@ body {
   align-items: center;
   height: 100vh;
   text-align: center;
-  background: linear-gradient(135deg, #f5f5f5, #e6e6e6);
+  background: #f5f5f5;
 }
 
 .welcome-title {
@@ -148,12 +148,13 @@ body {
 
 .btn-num {
   font-size: 16px;
-  margin-bottom: -5px;
+  margin-bottom: 3px;
 }
 
 .btn-title {
   text-transform: uppercase;
   font-size: 24px;
+  line-height: 130%;
 }
 
 /* --- Экспанаты --- */
@@ -270,7 +271,6 @@ body {
 }
 
 /* --- Адаптыўнасць --- */
-/* --- Адаптыўнасць --- */
 @media (max-width: 768px) {
   body {
     font-size: 16px;
@@ -304,7 +304,7 @@ body {
   .exb-text {
     width: 100%;
     font-size: 18px;
-    line-height: 21,6px;
+    line-height: 21, 6px;
     margin: 15px auto;
   }
 
