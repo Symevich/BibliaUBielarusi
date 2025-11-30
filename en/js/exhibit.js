@@ -1,0 +1,139 @@
+async function loadExhibit(section, id) {
+        try {
+          const response = await fetch("../json/catalog_en.json");
+          const data = await response.json();
+
+          const exhibit = data.find(
+            (e) => e.section === section && String(e.id) === String(id)
+          );
+
+          if (!exhibit) {
+            document.getElementById("container").innerHTML =
+              "<p>Exhibit not found.</p>";
+            return;
+          }
+
+          // generate "Back" button
+          const backBtnHTML =
+            section === "0" && String(id) === "0"
+              ? `<a href="../index.html" class="back-btn">&lt; Section selection</a>`
+              : `<a href="./section.html?section=${section}" class="back-btn">&lt; Back to section</a>`;
+          document.getElementById("back-container").innerHTML = backBtnHTML;
+
+          // info
+          const infoBlock = exhibit.info
+            ? `<p class="exb-info">${exhibit.info}</p>`
+            : "";
+
+          // images (without _ico)
+          let imgBlock = "";
+          if (exhibit.img && exhibit.img.length && exhibit.img !== "[]") {
+            const imgs = Array.isArray(exhibit.img) ? exhibit.img : [exhibit.img];
+            const cleanImgs = imgs.filter((src) => src && !src.includes("_ico."));
+
+            if (cleanImgs.length > 1) {
+              imgBlock = `
+                <div class="carousel">
+                  <div class="carousel-track">
+                    ${cleanImgs
+                      .map(
+                        (src) =>
+                          `<div class="carousel-slide"><img src="${src}" alt="Exhibit photo"></div>`
+                      )
+                      .join("")}
+                  </div>
+                  <button class="carousel-button prev">&#10094;</button>
+                  <button class="carousel-button next">&#10095;</button>
+                  <div class="carousel-dots">
+                    ${cleanImgs
+                      .map(
+                        (_, i) =>
+                          `<span class="dot${i === 0 ? " active" : ""}"></span>`
+                      )
+                      .join("")}
+                  </div>
+                </div>
+              `;
+            } else if (cleanImgs.length === 1) {
+              imgBlock = `<img src="${cleanImgs[0]}" alt="Exhibit photo" class="exb-img">`;
+            }
+          }
+
+          // audio
+          const audioBlock = exhibit.audio
+            ? `<audio src="${exhibit.audio}" type="audio/mpeg" class="exb-audio" controls></audio>`
+            : "";
+
+          // content
+          document.getElementById("container").innerHTML = `
+            <h3 class="exb-name">${exhibit.title}</h3>
+            ${infoBlock}
+            ${imgBlock}
+            ${audioBlock}
+            <div class="exb-text">${exhibit.text}</div>
+          `;
+
+          initCarousel();
+        } catch (err) {
+          document.getElementById("container").innerHTML =
+            "<p>Error loading exhibit.</p>";
+          console.error(err);
+        }
+      }
+
+      function initCarousel() {
+        const track = document.querySelector(".carousel-track");
+        if (!track) return;
+
+        const slides = Array.from(track.children);
+        const nextButton = document.querySelector(".carousel-button.next");
+        const prevButton = document.querySelector(".carousel-button.prev");
+        const dotsNav = document.querySelector(".carousel-dots");
+        const dots = dotsNav ? Array.from(dotsNav.children) : [];
+
+        let currentIndex = 0;
+
+        function updateCarousel(index) {
+          track.style.transform = `translateX(-${index * 100}%)`;
+          dots.forEach((dot) => dot.classList.remove("active"));
+          if (dots[index]) dots[index].classList.add("active");
+          currentIndex = index;
+        }
+
+        if (nextButton) {
+          nextButton.addEventListener("click", () => {
+            const newIndex = (currentIndex + 1) % slides.length;
+            updateCarousel(newIndex);
+          });
+        }
+
+        if (prevButton) {
+          prevButton.addEventListener("click", () => {
+            const newIndex = (currentIndex - 1 + slides.length) % slides.length;
+            updateCarousel(newIndex);
+          });
+        }
+
+        if (dotsNav) {
+          dotsNav.addEventListener("click", (e) => {
+            if (e.target.classList.contains("dot")) {
+              const index = dots.indexOf(e.target);
+              updateCarousel(index);
+            }
+          });
+        }
+
+        updateCarousel(0);
+      }
+
+      // read parameters from URL
+      const params = new URLSearchParams(window.location.search);
+      const section = params.get("section");
+      const id = params.get("id");
+
+      if (section && id) {
+        loadExhibit(section, id);
+      } else {
+        document.getElementById("container").innerHTML =
+          "<p>Parameters section and id are not specified.</p>";
+      }

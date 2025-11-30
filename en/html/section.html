@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="be">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Секцыя</title>
+    <link rel="stylesheet" href="../../styles/normalize.css" />
+    <link rel="stylesheet" href="../../styles/style.css" />
+  </head>
+  <body>
+    <div class="top-bar">
+      <button class="back-btn">
+        <a href="../index.html">&lt; Section choose</a>
+      </button>
+
+      <div class="lang-switch">
+        <div id="lang-btn"></div>
+      </div>
+    </div>
+    <div class="container">
+      <h1 class="page-title" id="section-title"></h1>
+      <ul class="list" id="exhibit-list"></ul>
+    </div>
+
+    <script src="../js/section.js"></script>
+
+    <script>
+      // read parameters from URL
+      const params1 = new URLSearchParams(window.location.search);
+      const section1 = params1.get("section");
+
+      // generate "Back" button
+      const langBlock1 = `
+      <button class="lang-btn">
+          <a href="../../be/html/section.html?section=${section1}">Беларуская</a>
+      </button>
+      <button class="lang-btn">
+          <a href="../../en/html/section.html?section=${section1}">English</a>
+      </button>
+      `;
+      document.getElementById("lang-btn").innerHTML = langBlock1;
+    </script>
+  </body>
+</html>
