@@ -1,15 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap");
 
-/* -------------------------
-   ГЛАБАЛЬНЫЯ РЭСЭТЫ
--------------------------- */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: "Roboto", sans-serif;
@@ -20,94 +11,54 @@ body {
   scroll-behavior: smooth;
 }
 
-ul {
-  list-style: none;
-}
+ul { list-style: none; }
+a  { text-decoration: none; color: inherit; display: block; }
+img { width: 100%; height: auto; display: block; }
 
-a {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-}
-
-img {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* -------------------------
-   ВЕРХНІ БАР (Назад + Мовы)
--------------------------- */
-.lang-switch {
+/* ── Navigation bar ─────────────────────────────────────────────── */
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
   display: flex;
-    align-items: flex-end;
-  position: fixed;
-  gap: 5px;
-  top: 10px;
-  right: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 10px;
+  pointer-events: none;
+  z-index: 100;
 }
 
-.back-btn,
-.lang-btn {
-  position: fixed;
-  background: #ffffffb3;
+.nav__back,
+.nav__lang-switch { pointer-events: all; }
+
+.nav__back-btn,
+.nav__lang-btn {
+  display: inline-block;
+  background: rgba(255,255,255,0.7);
   color: #0077cc;
   padding: 5px 10px;
   border-radius: 6px;
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.25s;
   backdrop-filter: blur(5px);
   border: none;
-  width: fit-content;
+  white-space: nowrap;
+  transition: background 0.25s;
 }
 
-/* Кнопка назад */
-.back-btn {
-  top: 10px;
-  left: 10px;
-}
+.nav__lang-switch { display: flex; gap: 5px; }
 
-.lang-btn {
-  position: static;
-}
+.nav__lang-btn--active,
+.nav__lang-btn--active a { font-weight: 700; color: #005fa3; }
 
-/* Ховер */
-.back-btn:hover,
-.lang-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: #0077cc;
-}
+.nav__back-btn:hover,
+.nav__lang-btn:hover { background: rgba(0,0,0,0.1); color: #0077cc; }
 
-/* --- Адаптыў --- */
-@media (max-width: 768px) {
-  .back-btn,
-  .lang-btn {
-    font-size: 14px;
-    padding: 5px 8px;
-  }
+/* ── Page container ─────────────────────────────────────────────── */
+.page { width: 70%; margin: 80px auto 0; padding-bottom: 50px; }
 
-  .back-btn {
-    top: 8px;
-    left: 8px;
-  }
-}
-
-/* -------------------------
-   КАНТЭЙНЕР
--------------------------- */
-.container {
-  width: 70%;
-  margin: 40px auto 0;
-  padding-bottom: 50px;
-}
-
-/* -------------------------
-   Welcome
--------------------------- */
-.welcome-container {
+/* ── Welcome / landing ──────────────────────────────────────────── */
+.welcome {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -117,46 +68,25 @@ img {
   background: #f5f5f5;
 }
 
-.welcome-title {
-  font-size: 36px;
-  font-weight: bold;
-  margin-bottom: 20px;
-}
+.welcome__title    { font-size: 36px; font-weight: bold; margin-bottom: 20px; }
+.welcome__subtitle { font-size: 22px; margin-bottom: 40px; color: #555; }
 
-.welcome-subtitle {
-  font-size: 22px;
-  margin-bottom: 40px;
-  color: #555;
-}
-
-.start-btn {
+.welcome__btn {
   display: inline-block;
   padding: 15px 40px;
   font-size: 22px;
   font-weight: bold;
-  color: white;
+  color: #fff;
   background: #0077cc;
-  border: none;
   border-radius: 8px;
-  text-decoration: none;
-  transition: background 0.3s ease;
+  transition: background 0.3s;
 }
+.welcome__btn:hover { background: #005fa3; }
 
-.start-btn:hover {
-  background: #005fa3;
-}
+/* ── Section / exhibit list ─────────────────────────────────────── */
+.page-title { text-align: center; font-size: 28px; margin-bottom: 25px; font-weight: bold; }
 
-/* -------------------------
-   Секцыі і спісы
--------------------------- */
-.page-title {
-  text-align: center;
-  font-size: 28px;
-  margin-bottom: 25px;
-  font-weight: bold;
-}
-
-.list .button {
+.exhibit-card {
   display: flex;
   align-items: center;
   gap: 40px;
@@ -166,36 +96,23 @@ img {
   padding: 15px;
   transition: background 0.2s;
 }
+.exhibit-card:hover { background: #f2f2f2; }
 
-.button:hover {
-  background: #f2f2f2;
-}
+.exhibit-card__thumb { flex-shrink: 0; }
 
-.btn-img {
+.exhibit-card__thumbnail {
   width: 85px;
   height: auto;
   border-radius: 5px;
   margin: 10px 10px 10px 15px;
 }
 
-.txt-container {
-  flex: 1;
-}
+.exhibit-card__info   { flex: 1; }
+.exhibit-card__label  { font-size: 16px; margin-bottom: 5px; }
+.exhibit-card__title  { font-size: 22px; text-transform: uppercase; }
 
-.btn-num {
-  font-size: 16px;
-  margin-bottom: 5px;
-}
-
-.btn-title {
-  font-size: 22px;
-  text-transform: uppercase;
-}
-
-/* -------------------------
-   Старонка экспаната
--------------------------- */
-.exb-name {
+/* ── Exhibit detail ─────────────────────────────────────────────── */
+.exhibit__title {
   text-align: center;
   font-size: 26px;
   margin-top: 10px;
@@ -203,129 +120,68 @@ img {
   text-transform: uppercase;
 }
 
-.exb-info {
-  text-align: center;
-  font-size: 16px;
-  color: gray;
-  margin-bottom: 15px;
-}
+.exhibit__meta  { text-align: center; font-size: 16px; color: gray; margin-bottom: 15px; }
+.exhibit__image { width: 60%; margin: 15px auto; border-radius: 20px; }
+.exhibit__audio { width: 100%; max-width: 800px; margin: 15px auto; display: block; }
 
-.exb-img {
-  width: 60%;
-  margin: 15px auto;
-  border-radius: 20px;
-}
+.exhibit__body  { width: 80%; margin: 20px auto; font-size: 20px; line-height: 1.5; }
+.exhibit__body p { margin-bottom: 15px; }
 
-/* аудио */
-.exb-audio {
-  width: 100%;
-  max-width: 800px;
-  margin: 15px auto;
-  display: block;
-}
+/* ── Carousel ───────────────────────────────────────────────────── */
+.carousel { width: 60%; margin: 15px auto; overflow: hidden; border-radius: 15px; position: relative; }
 
-/* тэкст */
-.exb-text {
-  width: 80%;
-  margin: 20px auto;
-  font-size: 20px;
-  line-height: 1.5;
-}
-
-.exb-text p {
-  margin-bottom: 15px;
-}
-
-/* -------------------------
-   Карусель
--------------------------- */
-.carousel {
-  width: 60%;
-  margin: 15px auto;
-  overflow: hidden;
-  border-radius: 15px;
-  position: relative;
-}
-
-.carousel-track {
+.carousel__track {
   display: flex;
-  transition: 0.4s ease-in-out;
+  transition: transform 0.4s ease-in-out;
+  outline: none;
 }
 
-.carousel-slide {
-  min-width: 100%;
-}
+.carousel__slide     { min-width: 100%; }
+.carousel__slide img { border-radius: 15px; }
 
-.carousel-slide img {
-  border-radius: 15px;
-}
-
-/* кнопкі */
-.carousel-button {
+.carousel__btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0,0,0,0.3);
   border: none;
   padding: 10px 14px;
   border-radius: 50%;
   cursor: pointer;
   color: #fff;
   font-size: 20px;
+  transition: background 0.2s;
 }
+.carousel__btn:hover { background: rgba(0,0,0,0.55); }
+.carousel__btn--prev { left: 10px; }
+.carousel__btn--next { right: 10px; }
 
-.carousel-button.prev {
-  left: 10px;
-}
+.carousel__dots { text-align: center; margin-top: 12px; }
 
-.carousel-button.next {
-  right: 10px;
-}
-
-/* кропкі */
-.carousel-dots {
-  text-align: center;
-  margin-top: 12px;
-}
-
-.carousel-dots .dot {
-  width: 12px;
-  height: 12px;
+.carousel__dot {
+  width: 12px; height: 12px;
   background: #bbb;
   border-radius: 50%;
   display: inline-block;
   margin: 0 4px;
+  cursor: pointer;
+  transition: background 0.2s;
 }
+.carousel__dot--active { background: #333; }
 
-.carousel-dots .dot.active {
-  background: #333;
-}
+/* ── Notices ────────────────────────────────────────────────────── */
+.notice        { text-align: center; padding: 20px; color: #555; }
+.notice--error { color: #c0392b; }
 
-/* -------------------------
-   Адаптыў
--------------------------- */
+/* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  body {
-    font-size: 16px;
-  }
+  body { font-size: 16px; }
 
-  .container {
-    width: 100%;
-    padding: 15px;
-    margin-top: 85px;
-  }
+  .page { width: 100%; padding: 15px; margin-top: 90px; }
 
-  .carousel,
-  .exb-img {
-    width: 100%;
-  }
+  .carousel, .exhibit__image { width: 100%; }
+  .exhibit__body  { width: 100%; font-size: 18px; }
+  .exhibit-card__title { font-size: 18px; }
 
-  .exb-text {
-    width: 100%;
-    font-size: 18px;
-  }
-
-  .btn-title {
-    font-size: 18px;
-  }
+  .nav__back-btn, .nav__lang-btn { font-size: 14px; padding: 5px 8px; }
 }
