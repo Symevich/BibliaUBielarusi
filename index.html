@@ -4,17 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bible in Belarus</title>
-  <link rel="stylesheet" href="styles/normalize.css">
   <link rel="stylesheet" href="styles/style.css">
 </head>
-<body data-page="home">
-  <nav id="js-nav" class="nav"></nav>
+<body>
 
-  <main class="welcome">
-    <h1 class="welcome__title"></h1>
-    <p class="welcome__subtitle"></p>
-    <a href="sections.html" class="welcome__btn"></a>
-  </main>
+  <!-- Skip link: visible only on keyboard focus -->
+  <a href="#js-root" class="skip-link">Skip to main content</a>
+
+  <!-- Navigation: rendered by JS on every route -->
+  <nav id="js-nav" class="nav" aria-label="Site navigation"></nav>
+
+  <!-- All page content renders here -->
+  <div id="js-root" tabindex="-1"></div>
+
+  <!-- Lightbox: hidden until an image is clicked -->
+  <div id="js-lightbox" class="lightbox" role="dialog"
+       aria-modal="true" aria-label="Image viewer" hidden>
+    <div class="lightbox__overlay"></div>
+    <button class="lightbox__close" aria-label="Close image viewer">&#x2715;</button>
+    <button class="lightbox__btn lightbox__btn--prev" aria-label="Previous image">&#10094;</button>
+    <button class="lightbox__btn lightbox__btn--next" aria-label="Next image">&#10095;</button>
+    <div class="lightbox__img-wrap">
+      <img class="lightbox__img" src="" alt="">
+    </div>
+  </div>
 
   <script src="js/app.js"></script>
 </body>

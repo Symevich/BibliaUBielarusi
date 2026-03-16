@@ -1,56 +1,45 @@
 /**
- * app.js — Biblia ў Belarusi / Bible in Belarus
+ * app.js — Biblia ŭ Bielarusi / Bible in Belarus
  *
- * Single script for the entire site. Page role is determined by
- * data-page attribute on <body>:
+ * Hash-based SPA:
+ *   #home            → welcome / landing page
+ *   #index           → section menu
+ *   #section/N       → exhibit list for section N
+ *   #exhibit/N/X     → exhibit detail for section N, id X
  *
- *   data-page="home"    → welcome / landing page (no logic needed)
- *   data-page="index"   → section menu
- *   data-page="section" → exhibit list  (?section=N)
- *   data-page="exhibit" → exhibit detail (?section=N&id=X)
- *
- * Locale is stored in localStorage and toggled by the lang switch.
- * Defaults to 'en'.
+ * Locale stored in localStorage (default: 'en').
+ * Data: json/sections/section_{N}_{lang}.json
  */
 
 'use strict';
 
-/* ═══════════════════════════════════════════════════════════════════
-   LOCALE
-═══════════════════════════════════════════════════════════════════ */
+/* ── Locale ──────────────────────────────────────────────────────── */
 
-const LOCALE_KEY = 'locale';
+function getLocale() { return localStorage.getItem('locale') || 'en'; }
+function setLocale(lang) { localStorage.setItem('locale', lang); }
 
-function getLocale() {
-  return localStorage.getItem(LOCALE_KEY) || 'en';
-}
-
-function setLocale(lang) {
-  localStorage.setItem(LOCALE_KEY, lang);
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   TRANSLATIONS
-═══════════════════════════════════════════════════════════════════ */
+/* ── Translations ────────────────────────────────────────────────── */
 
 const T = {
   be: {
-    siteTitle:       'Біблія ў Беларусі',
-    siteSubtitle:    'Віртуальная выстава',
-    start:           'Пачатак',
-    backToHome:      '← На галоўную',
-    backToSections:  '← Выбар секцый',
-    backToSection:   '← Назад у секцыю',
-    section:         'Секцыя',
-    exhibit:         'Экспанат',
-    preface:         'Прадмова',
-    notFound:        'Экспанат не знойдзены.',
-    emptySection:    'У гэтай секцыі няма экспанатаў.',
-    loadError:       'Памылка загрузкі.',
-    missingParams:   'Не зададзены патрэбныя параметры.',
-    altPhoto:        'Фота экспаната',
-    altThumb:        'Іконка экспаната',
-    altSection:      'Іконка секцыі',
+    siteTitle:      'Біблія ў Беларусі',
+    siteSubtitle:   'Віртуальная выстава',
+    start:          'Пачатак',
+    backToHome:     '← На галоўную',
+    backToSections: '← Выбар секцый',
+    backToSection:  '← Назад у секцыю',
+    section:        'Секцыя',
+    exhibit:        'Экспанат',
+    preface:        'Прадмова',
+    notFound:       'Экспанат не знойдзены.',
+    emptySection:   'У гэтай секцыі няма экспанатаў.',
+    loadErrorDetail:'Не ўдалося загрузіць дадзеныя. Праверце сваё злучэнне з Інтэрнэтам.',
+    loadError:      'Памылка загрузкі даных.',
+    retry:          'Паўтарыць',
+    altPhoto:       'Фота экспаната',
+    altThumb:       'Іконка экспаната',
+    altSection:     'Іконка секцыі',
+    openFullscreen: 'Адкрыць у поўнаэкранным рэжыме',
     sections: [
       'ПРАДМОВА',
       'НАРАДЖЭННЕ БІБЛІІ',
@@ -61,22 +50,24 @@ const T = {
     ],
   },
   en: {
-    siteTitle:       'Bible in Belarus',
-    siteSubtitle:    'Virtual exhibition',
-    start:           'Start',
-    backToHome:      '← Back to Home',
-    backToSections:  '← Section selection',
-    backToSection:   '← Back to section',
-    section:         'Section',
-    exhibit:         'Exhibit',
-    preface:         'Preface',
-    notFound:        'Exhibit not found.',
-    emptySection:    'This section has no exhibits.',
-    loadError:       'Error loading data.',
-    missingParams:   'Required parameters are missing.',
-    altPhoto:        'Exhibit photo',
-    altThumb:        'Exhibit icon',
-    altSection:      'Section icon',
+    siteTitle:      'Bible in Belarus',
+    siteSubtitle:   'Virtual exhibition',
+    start:          'Start',
+    backToHome:     '← Back to Home',
+    backToSections: '← Section selection',
+    backToSection:  '← Back to section',
+    section:        'Section',
+    exhibit:        'Exhibit',
+    preface:        'Preface',
+    notFound:       'Exhibit not found.',
+    emptySection:   'This section has no exhibits.',
+    loadErrorDetail:'Failed to load data. Please check your internet connection.',
+    loadError:      'Error loading data.',
+    retry:          'Retry',
+    altPhoto:       'Exhibit photo',
+    altThumb:       'Exhibit icon',
+    altSection:     'Section icon',
+    openFullscreen: 'Open fullscreen',
     sections: [
       'PREFACE',
       'THE BIRTH OF THE BIBLE',
@@ -88,59 +79,120 @@ const T = {
   },
 };
 
-/* ═══════════════════════════════════════════════════════════════════
-   CATALOG
-═══════════════════════════════════════════════════════════════════ */
+/* ── Data loading ────────────────────────────────────────────────── */
 
-let catalogCache = null;
+const cache = new Map();
 
-async function loadCatalog() {
-  if (catalogCache) return catalogCache;
-  const res = await fetch('json/catalog.json');
-  if (!res.ok) throw new Error(`Catalog fetch failed: ${res.status}`);
-  catalogCache = await res.json();
-  return catalogCache;
+async function loadSection(section, locale) {
+  const key = `${section}_${locale}`;
+  if (cache.has(key)) return cache.get(key);
+  const res = await fetch(`json/sections/section_${section}_${locale}.json`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  cache.set(key, data);
+  return data;
 }
 
-function findExhibit(catalog, section, id) {
-  return catalog.find(
-    (e) => String(e.section) === String(section) && String(e.id) === String(id)
-  );
+function findExhibit(exhibits, id) {
+  return exhibits.find(e => String(e.id) === String(id)) || null;
 }
 
-function getSection(catalog, section) {
-  return catalog.filter((e) => String(e.section) === String(section));
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   IMAGE HELPERS
-═══════════════════════════════════════════════════════════════════ */
+/* ── Image helpers ───────────────────────────────────────────────── */
 
 function toArray(val) {
-  if (!val) return [];
-  return (Array.isArray(val) ? val : [val]).filter(Boolean);
+  return val ? (Array.isArray(val) ? val : [val]).filter(Boolean) : [];
 }
 
 function thumbnail(images) {
-  return images.find((s) => s.includes('_ico.')) || images[0] || '';
+  return images.find(s => s.includes('_ico.')) || images[0] || '';
 }
 
 function displayImages(images) {
-  return images.filter((s) => !s.includes('_ico.'));
+  return images.filter(s => !s.includes('_ico.'));
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   CAROUSEL
-═══════════════════════════════════════════════════════════════════ */
+/* ── Error UI ────────────────────────────────────────────────────── */
+
+function renderError(container, retryFn) {
+  const t = T[getLocale()];
+  container.innerHTML = `
+    <div class="error-boundary" role="alert">
+      <div class="error-boundary__icon">⚠️</div>
+      <div class="error-boundary__title">${t.loadError}</div>
+      <div class="error-boundary__body">${t.loadErrorDetail}</div>
+      <button class="error-boundary__retry">${t.retry}</button>
+    </div>`;
+  container.querySelector('.error-boundary__retry').addEventListener('click', retryFn);
+}
+
+/* ── Lightbox ────────────────────────────────────────────────────── */
+
+const lightbox = {
+  el: null, imgEl: null, images: [], idx: 0, _prevFocus: null,
+
+  init() {
+    this.el    = document.getElementById('js-lightbox');
+    this.imgEl = this.el.querySelector('.lightbox__img');
+
+    this.el.querySelector('.lightbox__overlay').addEventListener('click', () => this.close());
+    this.el.querySelector('.lightbox__close').addEventListener('click',   () => this.close());
+    this.el.querySelector('.lightbox__btn--prev').addEventListener('click', () => this.go(this.idx - 1));
+    this.el.querySelector('.lightbox__btn--next').addEventListener('click', () => this.go(this.idx + 1));
+
+    document.addEventListener('keydown', e => {
+      if (!this.isOpen()) return;
+      if (e.key === 'Escape')     this.close();
+      if (e.key === 'ArrowLeft')  this.go(this.idx - 1);
+      if (e.key === 'ArrowRight') this.go(this.idx + 1);
+    });
+  },
+
+  open(images, startIdx = 0) {
+    this.images = images;
+    this.idx    = startIdx;
+    this._prevFocus = document.activeElement;
+    this.el.toggleAttribute('data-single', images.length === 1);
+    this._render();
+    this.el.removeAttribute('hidden');
+    document.body.style.overflow = 'hidden';
+    this.el.querySelector('.lightbox__close').focus();
+  },
+
+  close() {
+    this.el.setAttribute('hidden', '');
+    document.body.style.overflow = '';
+    if (this._prevFocus) this._prevFocus.focus();
+  },
+
+  go(n) {
+    this.idx = ((n % this.images.length) + this.images.length) % this.images.length;
+    this._render();
+  },
+
+  isOpen() { return !this.el.hasAttribute('hidden'); },
+
+  _render() {
+    this.imgEl.src = this.images[this.idx];
+    this.imgEl.alt = T[getLocale()].altPhoto;
+  },
+};
+
+/* ── Carousel ────────────────────────────────────────────────────── */
 
 function buildCarousel(images, altText) {
-  const slides = images
-    .map((src) => `<div class="carousel__slide"><img src="${src}" alt="${altText}" loading="lazy"></div>`)
-    .join('');
+  const t = T[getLocale()];
+  const slides = images.map((src, i) => `
+    <div class="carousel__slide">
+      <img src="${src}" alt="${altText}" loading="lazy"
+           class="carousel__img--clickable"
+           data-lightbox-idx="${i}"
+           style="cursor:zoom-in"
+           title="${t.openFullscreen}">
+    </div>`).join('');
 
-  const dots = images
-    .map((_, i) => `<span class="carousel__dot${i === 0 ? ' carousel__dot--active' : ''}"></span>`)
-    .join('');
+  const dots = images.map((_, i) =>
+    `<span class="carousel__dot${i === 0 ? ' carousel__dot--active' : ''}"></span>`
+  ).join('');
 
   return `
     <div class="carousel">
@@ -151,17 +203,15 @@ function buildCarousel(images, altText) {
     </div>`;
 }
 
-function initCarousel() {
+function initCarousel(images) {
   const track = document.querySelector('.carousel__track');
   if (!track) return;
 
-  const slides   = track.children;
-  const dotsWrap = document.querySelector('.carousel__dots');
-  const dots     = dotsWrap ? Array.from(dotsWrap.children) : [];
+  const dots = Array.from(document.querySelectorAll('.carousel__dot'));
   let idx = 0;
 
   function goTo(n) {
-    idx = (n + slides.length) % slides.length;
+    idx = ((n % track.children.length) + track.children.length) % track.children.length;
     track.style.transform = `translateX(-${idx * 100}%)`;
     dots.forEach((d, i) => d.classList.toggle('carousel__dot--active', i === idx));
   }
@@ -169,77 +219,68 @@ function initCarousel() {
   document.querySelector('.carousel__btn--prev')?.addEventListener('click', () => goTo(idx - 1));
   document.querySelector('.carousel__btn--next')?.addEventListener('click', () => goTo(idx + 1));
 
-  dotsWrap?.addEventListener('click', (e) => {
+  document.querySelector('.carousel__dots')?.addEventListener('click', e => {
     const dot = e.target.closest('.carousel__dot');
     if (dot) goTo(dots.indexOf(dot));
   });
 
-  track.addEventListener('keydown', (e) => {
+  track.addEventListener('keydown', e => {
     if (e.key === 'ArrowLeft')  goTo(idx - 1);
     if (e.key === 'ArrowRight') goTo(idx + 1);
+  });
+
+  track.querySelectorAll('.carousel__img--clickable').forEach(img => {
+    img.addEventListener('click', () => lightbox.open(images, Number(img.dataset.lightboxIdx)));
   });
 
   goTo(0);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   NAV — shared header rendered on every page
-═══════════════════════════════════════════════════════════════════ */
+/* ── Navigation ──────────────────────────────────────────────────── */
 
-/**
- * @param {object} opts
- * @param {string} [opts.backHref]   - href for the back button; omit to hide it
- * @param {string} [opts.backLabel]  - label for the back button
- */
 function renderNav({ backHref, backLabel } = {}) {
   const locale = getLocale();
-  const nav    = document.getElementById('js-nav');
+  const nav = document.getElementById('js-nav');
   if (!nav) return;
 
   const backHTML = backHref
     ? `<div class="nav__back"><a href="${backHref}" class="nav__back-btn">${backLabel}</a></div>`
     : '<div class="nav__back"></div>';
 
-  // Clicking a lang button: save locale then reload so page re-renders in new lang
   nav.innerHTML = `
     ${backHTML}
     <div class="nav__lang-switch">
-      <button class="nav__lang-btn${locale === 'be' ? ' nav__lang-btn--active' : ''}"
-              data-lang="be">Беларуская</button>
-      <button class="nav__lang-btn${locale === 'en' ? ' nav__lang-btn--active' : ''}"
-              data-lang="en">English</button>
+      <button class="nav__lang-btn${locale === 'be' ? ' nav__lang-btn--active' : ''}" data-lang="be">Беларуская</button>
+      <button class="nav__lang-btn${locale === 'en' ? ' nav__lang-btn--active' : ''}" data-lang="en">English</button>
     </div>`;
 
-  nav.querySelectorAll('[data-lang]').forEach((btn) => {
+  nav.querySelectorAll('[data-lang]').forEach(btn => {
     btn.addEventListener('click', () => {
       setLocale(btn.dataset.lang);
-      location.reload();
+      cache.clear();
+      router();
     });
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   PAGES
-═══════════════════════════════════════════════════════════════════ */
+function getRoot() { return document.getElementById('js-root'); }
 
-/* ── Home (index.html) ──────────────────────────────────────────── */
+/* ── Pages ───────────────────────────────────────────────────────── */
+
 function renderHome() {
-  const locale = getLocale();
-  const t      = T[locale];
-
+  const t = T[getLocale()];
   renderNav();
-
-  document.querySelector('.welcome__title').textContent    = t.siteTitle;
-  document.querySelector('.welcome__subtitle').textContent = t.siteSubtitle;
-  document.querySelector('.welcome__btn').textContent      = t.start;
   document.title = t.siteTitle;
+  getRoot().innerHTML = `
+    <main class="welcome">
+      <h1 class="welcome__title">${t.siteTitle}</h1>
+      <p class="welcome__subtitle">${t.siteSubtitle}</p>
+      <a href="#index" class="welcome__btn">${t.start}</a>
+    </main>`;
 }
 
-/* ── Section index (sections.html) ─────────────────────────────── */
-
-// Static section data: [sectionNumber, imgFile]
-const SECTION_INDEX = [
-  [0, 'img/79.webp'],   // preface
+const SECTION_ICONS = [
+  [0, 'img/79.webp'],
   [1, 'img/5.webp'],
   [2, 'img/14.webp'],
   [3, 'img/21.webp'],
@@ -249,23 +290,14 @@ const SECTION_INDEX = [
 
 function renderSectionIndex() {
   const locale = getLocale();
-  const t      = T[locale];
-
-  renderNav({ backHref: 'index.html', backLabel: t.backToHome });
-
-  document.querySelector('.page-title').textContent = t.siteTitle;
+  const t = T[locale];
+  renderNav({ backHref: '#home', backLabel: t.backToHome });
   document.title = t.siteTitle;
 
-  const list = document.getElementById('js-list');
-  list.innerHTML = SECTION_INDEX.map(([sec, img]) => {
+  const list = SECTION_ICONS.map(([sec, img]) => {
     const isPreface = sec === 0;
-    const href      = isPreface
-      ? `exhibit.html?section=0&id=0`
-      : `section.html?section=${sec}`;
-    const labelHTML = isPreface
-      ? ''
-      : `<p class="exhibit-card__label">${t.section} ${sec}</p>`;
-
+    const href      = isPreface ? '#exhibit/0/0' : `#section/${sec}`;
+    const labelHTML = isPreface ? '' : `<p class="exhibit-card__label">${t.section} ${sec}</p>`;
     return `
       <li>
         <a href="${href}" class="exhibit-card">
@@ -279,131 +311,145 @@ function renderSectionIndex() {
         </a>
       </li>`;
   }).join('');
+
+  getRoot().innerHTML = `
+    <div class="page">
+      <h2 class="page-title">${t.siteTitle}</h2>
+      <ul>${list}</ul>
+    </div>`;
 }
 
-/* ── Section listing (section.html) ────────────────────────────── */
-async function renderSection() {
-  const locale  = getLocale();
-  const t       = T[locale];
-  const params  = new URLSearchParams(location.search);
-  const section = params.get('section');
+async function renderSection(section) {
+  const locale = getLocale();
+  const t = T[locale];
+  renderNav({ backHref: '#index', backLabel: t.backToSections });
+  document.title = `${t.section} ${section}`;
 
-  renderNav({ backHref: 'sections.html', backLabel: t.backToSections });
+  const root = getRoot();
+  root.innerHTML = `<div class="page"><h2 class="page-title">${t.section} ${section}</h2><ul></ul></div>`;
+  const listEl = root.querySelector('ul');
 
-  const titleEl = document.getElementById('js-title');
-  const listEl  = document.getElementById('js-list');
+  const doLoad = async () => {
+    try {
+      const exhibits = await loadSection(section, locale);
 
-  if (!section) {
-    titleEl.textContent = '';
-    listEl.innerHTML    = `<p class="notice notice--error">${t.missingParams}</p>`;
-    return;
-  }
+      if (!exhibits.length) {
+        listEl.innerHTML = `<p class="notice">${t.emptySection}</p>`;
+        return;
+      }
 
-  document.title = titleEl.textContent = `${t.section} ${section}`;
+      listEl.innerHTML = exhibits.map(e => {
+        const isIntro = typeof e.id === 'string' && e.id.startsWith('intro_');
+        const label   = isIntro ? t.preface : `${t.exhibit} ${e.id}`;
+        const imgs    = toArray(e.img);
+        const thumb   = thumbnail(imgs);
+        const thumbHTML = thumb
+          ? `<img src="${thumb}" alt="${t.altThumb}" class="exhibit-card__thumbnail" loading="lazy">`
+          : '';
 
-  try {
-    const catalog  = await loadCatalog();
-    const exhibits = getSection(catalog, section);
+        return `
+          <li>
+            <a href="#exhibit/${e.section}/${e.id}" class="exhibit-card">
+              <div class="exhibit-card__thumb">${thumbHTML}</div>
+              <div class="exhibit-card__info">
+                <p class="exhibit-card__label">${label}</p>
+                <h3 class="exhibit-card__title">${e[locale].title}</h3>
+              </div>
+            </a>
+          </li>`;
+      }).join('');
 
-    if (!exhibits.length) {
-      listEl.innerHTML = `<p class="notice">${t.emptySection}</p>`;
-      return;
+    } catch (err) {
+      console.error('[section]', err);
+      renderError(listEl, doLoad);
     }
+  };
 
-    listEl.innerHTML = exhibits.map((e) => {
-      const isIntro   = typeof e.id === 'string' && e.id.startsWith('intro_');
-      const labelHTML = isIntro
-        ? `<p class="exhibit-card__label">${t.preface}</p>`
-        : `<p class="exhibit-card__label">${t.exhibit} ${e.id}</p>`;
-
-      const imgs   = toArray(e.img);
-      const thumb  = thumbnail(imgs);
-      const thumbHTML = thumb
-        ? `<img src="${thumb}" alt="${t.altThumb}" class="exhibit-card__thumbnail" loading="lazy">`
-        : '';
-
-      return `
-        <li>
-          <a href="exhibit.html?section=${e.section}&id=${e.id}" class="exhibit-card">
-            <div class="exhibit-card__thumb">${thumbHTML}</div>
-            <div class="exhibit-card__info">
-              ${labelHTML}
-              <h3 class="exhibit-card__title">${e[locale].title}</h3>
-            </div>
-          </a>
-        </li>`;
-    }).join('');
-
-  } catch (err) {
-    console.error('[section]', err);
-    listEl.innerHTML = `<p class="notice notice--error">${t.loadError}</p>`;
-  }
+  await doLoad();
 }
 
-/* ── Exhibit detail (exhibit.html) ─────────────────────────────── */
-async function renderExhibit() {
-  const locale  = getLocale();
-  const t       = T[locale];
-  const params  = new URLSearchParams(location.search);
-  const section = params.get('section');
-  const id      = params.get('id');
-
-  const contentEl = document.getElementById('js-content');
-
+async function renderExhibit(section, id) {
+  const locale    = getLocale();
+  const t         = T[locale];
   const isPreface = section === '0' && id === '0';
+
   renderNav({
-    backHref:  isPreface ? 'sections.html' : `section.html?section=${section}`,
+    backHref:  isPreface ? '#index' : `#section/${section}`,
     backLabel: isPreface ? t.backToSections : t.backToSection,
   });
 
-  if (!section || !id) {
-    contentEl.innerHTML = `<p class="notice notice--error">${t.missingParams}</p>`;
-    return;
-  }
+  const root = getRoot();
+  root.innerHTML = '<div class="page"></div>';
+  const contentEl = root.querySelector('.page');
 
-  try {
-    const catalog = await loadCatalog();
-    const exhibit = findExhibit(catalog, section, id);
+  const doLoad = async () => {
+    try {
+      const exhibits = await loadSection(section, locale);
+      const exhibit  = findExhibit(exhibits, id);
 
-    if (!exhibit) {
-      contentEl.innerHTML = `<p class="notice notice--error">${t.notFound}</p>`;
-      return;
+      if (!exhibit) {
+        contentEl.innerHTML = `<p class="notice notice--error">${t.notFound}</p>`;
+        return;
+      }
+
+      const loc  = exhibit[locale];
+      document.title = loc.title;
+
+      const imgs    = displayImages(toArray(exhibit.img));
+      const imgHTML = imgs.length === 0
+        ? ''
+        : imgs.length === 1
+          ? `<img src="${imgs[0]}" alt="${t.altPhoto}" class="exhibit__image"
+                  loading="lazy" style="cursor:zoom-in"
+                  title="${t.openFullscreen}"
+                  data-lightbox-single>`
+          : buildCarousel(imgs, t.altPhoto);
+
+      const infoHTML  = loc.info  ? `<p class="exhibit__meta">${loc.info}</p>` : '';
+      const audioHTML = exhibit.audio
+        ? `<audio src="${exhibit.audio}" class="exhibit__audio" controls></audio>`
+        : '';
+
+      contentEl.innerHTML = `
+        <h3 class="exhibit__title">${loc.title}</h3>
+        ${infoHTML}
+        ${imgHTML}
+        ${audioHTML}
+        <div class="exhibit__body">${loc.text}</div>`;
+
+      const singleImg = contentEl.querySelector('[data-lightbox-single]');
+      if (singleImg) singleImg.addEventListener('click', () => lightbox.open(imgs, 0));
+
+      if (imgs.length > 1) initCarousel(imgs);
+
+    } catch (err) {
+      console.error('[exhibit]', err);
+      renderError(contentEl, doLoad);
     }
+  };
 
-    const loc = exhibit[locale];
-    document.title = loc.title;
+  await doLoad();
+}
 
-    const imgs    = displayImages(toArray(exhibit.img));
-    const imgHTML = imgs.length === 0 ? ''
-      : imgs.length === 1
-        ? `<img src="${imgs[0]}" alt="${t.altPhoto}" class="exhibit__image" loading="lazy">`
-        : buildCarousel(imgs, t.altPhoto);
+/* ── Router ──────────────────────────────────────────────────────── */
 
-    const infoHTML  = loc.info  ? `<p class="exhibit__meta">${loc.info}</p>`                  : '';
-    const audioHTML = exhibit.audio ? `<audio src="${exhibit.audio}" class="exhibit__audio" controls></audio>` : '';
+function router() {
+  const hash  = location.hash.slice(1) || 'home';
+  const parts = hash.split('/');
 
-    contentEl.innerHTML = `
-      <h3 class="exhibit__title">${loc.title}</h3>
-      ${infoHTML}
-      ${imgHTML}
-      ${audioHTML}
-      <div class="exhibit__body">${loc.text}</div>`;
-
-    initCarousel();
-
-  } catch (err) {
-    console.error('[exhibit]', err);
-    contentEl.innerHTML = `<p class="notice notice--error">${t.loadError}</p>`;
+  switch (parts[0]) {
+    case 'home':    renderHome();                                    break;
+    case 'index':   renderSectionIndex();                            break;
+    case 'section': renderSection(parts[1] || '1');                  break;
+    case 'exhibit': renderExhibit(parts[1] || '0', parts[2] || '0'); break;
+    default:        renderHome();
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   ROUTER — dispatch based on data-page
-═══════════════════════════════════════════════════════════════════ */
+/* ── Init ────────────────────────────────────────────────────────── */
 
-const PAGE = document.body.dataset.page;
-
-if      (PAGE === 'home')     renderHome();
-else if (PAGE === 'index')    renderSectionIndex();
-else if (PAGE === 'section')  renderSection();
-else if (PAGE === 'exhibit')  renderExhibit();
+window.addEventListener('hashchange', router);
+document.addEventListener('DOMContentLoaded', () => {
+  lightbox.init();
+  router();
+});
