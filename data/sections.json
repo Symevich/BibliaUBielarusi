@@ -1,0 +1,62 @@
+[
+  {
+    "id": 0,
+    "cover": "assets/img/79.webp",
+    "title": {
+      "be": "Прадмова",
+      "ru": "Предисловие",
+      "en": "Preface"
+    },
+    "objectsCount": 0
+  },
+  {
+    "id": 1,
+    "cover": "assets/img/5.webp",
+    "title": {
+      "be": "Нараджэнне Бібліі",
+      "ru": "Рождение Библии",
+      "en": "The Birth of the Bible"
+    },
+    "objectsCount": 13
+  },
+  {
+    "id": 2,
+    "cover": "assets/img/14.webp",
+    "title": {
+      "be": "Ісус Хрыстос і Яго вучні",
+      "ru": "Иисус Христос и Его ученики",
+      "en": "Jesus Christ and His Disciples"
+    },
+    "objectsCount": 8
+  },
+  {
+    "id": 3,
+    "cover": "assets/img/21.webp",
+    "title": {
+      "be": "Рукапісныя Бібліі",
+      "ru": "Рукописные Библии",
+      "en": "Manuscript Bibles"
+    },
+    "objectsCount": 10
+  },
+  {
+    "id": 4,
+    "cover": "assets/img/33.webp",
+    "title": {
+      "be": "Францыск Скарына і эпоха Рэфармацыі",
+      "ru": "Франциск Скорина и эпоха Реформации",
+      "en": "Francysk Skaryna and the Reformation Era"
+    },
+    "objectsCount": 15
+  },
+  {
+    "id": 5,
+    "cover": "assets/img/75.webp",
+    "title": {
+      "be": "Сучасныя беларускія пераклады Бібліі",
+      "ru": "Современные белорусские переводы Библии",
+      "en": "Modern Belarusian Bible Translations"
+    },
+    "objectsCount": 34
+  }
+]

@@ -1,34 +1,137 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="be" dir="ltr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bible in Belarus</title>
-  <link rel="stylesheet" href="styles/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Біблія ў Беларусі — аўдыягід па выставе" />
+  <title>Біблія ў Беларусі</title>
+
+  <!-- Preconnect to Google Fonts CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!--
+    Cormorant Garamond  — display / headings (editorial, historical feel)
+    Inter               — body / UI (clean, legible at small sizes)
+  -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-  <!-- Skip link: visible only on keyboard focus -->
-  <a href="#js-root" class="skip-link">Skip to main content</a>
+  <!-- ─── Skip navigation (accessibility) ──────────────────────── -->
+  <a class="skip-link" href="#app">Skip to content</a>
 
-  <!-- Navigation: rendered by JS on every route -->
-  <nav id="js-nav" class="nav" aria-label="Site navigation"></nav>
+  <!-- ─── Persistent site header ───────────────────────────────── -->
+  <!--
+    The header never re-renders. Language buttons here call
+    app.switchLanguage() which re-routes the current view in the new locale.
+  -->
+  <header class="site-header" role="banner">
+    <div class="site-header__inner">
 
-  <!-- All page content renders here -->
-  <div id="js-root" tabindex="-1"></div>
+      <!-- Logo / home link — SPA-navigates, never reloads -->
+      <a class="site-header__logo" href="index.html"
+         aria-label="Біблія ў Беларусі — галоўная">
+        Біблія ў Беларусі
+      </a>
 
-  <!-- Lightbox: hidden until an image is clicked -->
-  <div id="js-lightbox" class="lightbox" role="dialog"
-       aria-modal="true" aria-label="Image viewer" hidden>
-    <div class="lightbox__overlay"></div>
-    <button class="lightbox__close" aria-label="Close image viewer">&#x2715;</button>
-    <button class="lightbox__btn lightbox__btn--prev" aria-label="Previous image">&#10094;</button>
-    <button class="lightbox__btn lightbox__btn--next" aria-label="Next image">&#10095;</button>
-    <div class="lightbox__img-wrap">
-      <img class="lightbox__img" src="" alt="">
+      <!-- Language switcher -->
+      <nav class="lang-switcher" aria-label="Language / Мова / Язык">
+        <button class="lang-btn" data-lang="be" aria-pressed="true">BE</button>
+        <button class="lang-btn" data-lang="ru" aria-pressed="false">RU</button>
+        <button class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+      </nav>
+
     </div>
-  </div>
+  </header>
 
-  <script src="js/app.js"></script>
+  <!-- ─── Main SPA viewport ─────────────────────────────────────── -->
+  <!--
+    Every view (home / section / object) renders exclusively into #app.
+    Audio in the footer is NOT inside #app and therefore survives
+    all view transitions without interruption.
+  -->
+  <main id="app" tabindex="-1" role="main">
+    <!-- Populated entirely by JS views -->
+  </main>
+
+  <!-- ─── Persistent audio player ──────────────────────────────── -->
+  <!--
+    Lives OUTSIDE #app so navigation never touches it.
+    Initially hidden; player.js shows it the first time audio loads.
+    The <audio> element is the single source of truth — all controls
+    in player.js read from / write to this one element.
+  -->
+  <footer class="audio-player" id="audio-player" role="complementary"
+          aria-label="Audio player" hidden>
+
+    <audio id="audio-el" preload="metadata"></audio>
+
+    <div class="audio-player__inner">
+
+      <!-- Track title (set by objectView when it calls player.load()) -->
+      <div class="audio-player__meta" aria-live="polite">
+        <span class="audio-player__title" id="audio-title">—</span>
+      </div>
+
+      <!-- Controls row -->
+      <div class="audio-player__controls">
+
+        <button class="ap-btn ap-btn--play" id="ap-play"
+                aria-label="Прайграць" title="Прайграць / Паўза">
+          <!-- SVG icons — CSS controls visibility via .is-playing on the button -->
+          <svg class="ap-icon ap-icon--play" viewBox="0 0 24 24" aria-hidden="true">
+            <polygon points="5,3 19,12 5,21"/>
+          </svg>
+          <svg class="ap-icon ap-icon--pause" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="6" y="4" width="4" height="16"/>
+            <rect x="14" y="4" width="4" height="16"/>
+          </svg>
+        </button>
+
+        <!-- Elapsed / duration -->
+        <span class="ap-time">
+          <span id="ap-current">0:00</span>
+          <span class="ap-time__sep">/</span>
+          <span id="ap-duration">0:00</span>
+        </span>
+
+        <!-- Seek bar -->
+        <input class="ap-seek" id="ap-seek" type="range"
+               min="0" max="100" value="0" step="0.1"
+               aria-label="Пазіцыя ў запісе" />
+
+        <!-- Volume mute toggle -->
+        <button class="ap-btn ap-btn--mute" id="ap-mute"
+                aria-label="Выключыць гук" title="Гук">
+          <svg class="ap-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M11 5 6 9H2v6h4l5 4V5z"/>
+            <path class="ap-vol-on" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/>
+          </svg>
+        </button>
+
+        <!-- Volume slider (hidden on narrow screens via CSS) -->
+        <input class="ap-volume" id="ap-volume" type="range"
+               min="0" max="1" step="0.05" value="1"
+               aria-label="Гучнасць" />
+
+      </div>
+      <!-- /controls row -->
+
+    </div>
+  </footer>
+  <!-- /audio-player -->
+
+  <!--
+    Single ES-module entry point.
+    All other modules are imported from app.js via static import.
+    No bundler required — browsers handle ES modules natively.
+  -->
+  <script type="module" src="js/app.js"></script>
+
 </body>
 </html>
