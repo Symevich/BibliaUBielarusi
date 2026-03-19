@@ -63,7 +63,7 @@
      --max-w:      content column width (text, object detail, home list)
      --max-w-wide: wider column (section listing with many cards)
      Both are px values so they work correctly at all viewport sizes.    */
-  --header-h:   58px;
+  --header-h:   70px;
   --player-h:   68px;
   --max-w:      740px;
   --max-w-wide: 960px;
@@ -210,6 +210,21 @@ body {
 .view--home    { max-width: var(--max-w); }
 .view--section { max-width: var(--max-w-wide); }
 .view--object  { max-width: var(--max-w); }
+.view--welcome { max-width: var(--max-w); }
+
+/* ── Welcome page ─────────────────────────────────────────────────── */
+.hero--welcome {
+  min-height: calc(100vh - var(--header-h) - 80px);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  border-bottom: none;
+  padding: 60px 0;
+}
+.welcome__btn {
+  margin-top: 36px;
+  padding: 14px 48px;
+  font-size: 15px; letter-spacing: .12em; text-transform: uppercase;
+}
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(8px); }
@@ -255,8 +270,8 @@ body {
 /* ── 9. Shared button ─────────────────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
-  gap: 8px; padding: 10px 24px;
-  border-radius: var(--r-sm);
+  /* padding: 10px 24px; */
+  border-radius: var(--r-md);
   font-size: 14px; font-weight: 600; letter-spacing: .06em;
   border: none; cursor: pointer;
   transition: background var(--t-fast), transform var(--t-fast),
@@ -370,6 +385,7 @@ body {
   transition: background var(--t-fast);
   /* Ensure the card itself never overflows its container */
   min-width: 0;
+  min-height: 80px;
 }
 .object-card:hover { background: var(--surface); }
 
@@ -378,7 +394,6 @@ body {
   flex-shrink: 0;
   width: 85px;
   background: #ffffff;
-  border: 1px solid var(--border);
 }
 .object-card__thumb {
   width: 100%; height: 100%;
@@ -405,7 +420,7 @@ body {
   color: var(--text);
   /* Allow 2 lines before clipping */
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  --webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -445,10 +460,11 @@ body {
 
 /* Media wrapper — no fixed height, let the image dictate its own size */
 .object-detail__media {
-  margin-bottom: 24px;
+  margin: 0 auto 24px;
   border-radius: var(--r-lg); overflow: hidden;
   background: var(--bg-3);
   box-shadow: var(--shadow-md);
+  max-width: fit-content;
 }
 
 /* Single image — full width, natural height, no cropping */
@@ -457,6 +473,7 @@ body {
   height: auto;
   display: block;
   object-fit: contain;
+  max-height: 500px;
 }
 
 /* Description text */
@@ -538,6 +555,8 @@ body {
 .carousel {
   position: relative; overflow: hidden;
   background: var(--bg-3);
+  max-height: 500px;
+  max-width: fit-content;
 }
 
 .carousel__track {
@@ -551,13 +570,12 @@ body {
 
 .carousel__slide {
   min-width: 100%;
-  /* No max-height / overflow:hidden — let the image show in full */
 }
+
 .carousel__img {
-  width: 100%;
-  height: auto;
   display: block;
   object-fit: contain;
+  max-height: 500px;
 }
 
 .carousel__btn {
@@ -572,6 +590,7 @@ body {
   z-index: 2;
   transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
 }
+
 .carousel__btn:hover {
   background: rgba(200, 160, 40, .2);
   border-color: var(--gold); color: var(--gold);

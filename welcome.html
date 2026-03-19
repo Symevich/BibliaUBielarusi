@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="be">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Біблія ў Беларусі — аўдыягід па выставе"
+    />
+    <title>Біблія ў Беларусі</title>
+
+    <!-- Preconnect to Google Fonts CDN -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+    Cormorant Garamond  — display / headings (editorial, historical feel)
+    Inter               — body / UI (clean, legible at small sizes)
+  -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <!-- ─── Skip navigation (accessibility) ──────────────────────── -->
+    <a class="skip-link" href="#app">Skip to content</a>
+
+    <!-- ─── Persistent site header ───────────────────────────────── -->
+    <!--
+    Language buttons call renderWelcome() after persisting the new locale
+    so the welcome text updates in place without a page reload.
+  -->
+    <header class="site-header" role="banner">
+      <div class="site-header__inner">
+
+        <!-- Logo — plain text on welcome page, no SPA navigation needed -->
+        <span class="site-header__logo" aria-label="Біблія ў Беларусі — галоўная">
+          Біблія ў Беларусі
+        </span>
+
+        <!-- Language switcher -->
+        <nav class="lang-switcher" aria-label="Language / Мова / Язык">
+          <button class="lang-btn" data-lang="be" aria-pressed="true">BE</button>
+          <button class="lang-btn" data-lang="ru" aria-pressed="false">RU</button>
+          <button class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+        </nav>
+
+      </div>
+    </header>
+
+    <!-- ─── Welcome view renders here ────────────────────────────── -->
+    <main id="app" tabindex="-1" role="main">
+      <!-- Populated by welcomeView.js on DOMContentLoaded -->
+    </main>
+
+    <script type="module">
+      import { renderWelcome } from './js/views/welcomeView.js';
+      document.addEventListener('DOMContentLoaded', renderWelcome);
+    </script>
+  </body>
+</html>

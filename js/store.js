@@ -66,6 +66,7 @@ export const T = {
   be: {
     siteTitle:     'Біблія ў Беларусі',
     siteSubtitle:  'Аўдыягід па выставе',
+    welcomeButton: 'Пачаць',
     allSections:   'Усе раздзелы',
     section:       'Раздзел',
     objects:       'аб\'ектаў',
@@ -88,6 +89,7 @@ export const T = {
   ru: {
     siteTitle:     'Библия в Беларуси',
     siteSubtitle:  'Аудиогид по выставке',
+    welcomeButton: 'Начать',
     allSections:   'Все разделы',
     section:       'Раздел',
     objects:       'объектов',
@@ -110,6 +112,7 @@ export const T = {
   en: {
     siteTitle:     'Bible in Belarus',
     siteSubtitle:  'Exhibition Audio Guide',
+    welcomeButton: 'Start',
     allSections:   'All Sections',
     section:       'Section',
     objects:       'objects',

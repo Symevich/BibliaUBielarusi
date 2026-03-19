@@ -54,6 +54,7 @@ export async function route() {
   // Scroll to top on every navigation
   window.scrollTo({ top: 0, behavior: 'instant' });
 
+    
   if (section !== null && id !== null) {
     const { renderObject } = await import('./views/objectView.js');
     renderObject(section, id);
@@ -65,6 +66,7 @@ export async function route() {
   } else {
     const { renderHome } = await import('./views/homeView.js');
     renderHome();
+
   }
 }
 
