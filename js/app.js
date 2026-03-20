@@ -10,8 +10,7 @@
  *       resolveImg()       "img/5.webp" → "assets/img/5.webp"
  *       buildPicture()     <picture> WebP + JPG fallback HTML string
  *       splitImages()      separate _ico thumbnails from display images
- *       buildCarousel()    multi-image carousel HTML string
- *       initCarousel()     wire carousel controls after DOM insertion
+ *       buildImages()      render all images stacked in the media box
  *       setLoading()       show spinner in #app
  *       setError()         show error + retry button in #app
  *       getApp()           return the #app element
@@ -114,7 +113,7 @@ export function buildPicture(src, alt, cls = '', lazy = true) {
 /**
  * Split a raw img array from JSON into:
  *   thumb   — the _ico variant (or first image) for list cards
- *   display — images without _ico, shown in the detail view / carousel
+ *   display — images without _ico, shown in the detail view
  *
  * Both paths are resolved via resolveImg().
  *
@@ -132,80 +131,35 @@ export function splitImages(imgArray) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  CAROUSEL
+//  IMAGE RENDERING
 // ═══════════════════════════════════════════════════════════════════
 
 /**
- * Build carousel HTML for an array of resolved image paths.
- * For a single image, returns a plain <picture> (no carousel chrome).
- * Call initCarousel(root) after inserting the HTML into the DOM.
+ * Render all display images for an exhibit inside the media box.
  *
- * @param {string[]} images
- * @param {string}   alt
+ * - Single image  → plain <picture class="object-detail__media-single">
+ * - Multiple images → <div class="media-stack"> containing one
+ *   <picture> per image, all visible and stacked vertically.
+ *   Each image is capped at 500px height via CSS.
+ *
+ * No JavaScript interaction required.
+ *
+ * @param {string[]} images   Resolved asset paths (no _ico entries).
+ * @param {string}   alt      Base alt text.
  * @returns {string}
  */
-export function buildCarousel(images, alt) {
+export function buildImages(images, alt) {
   if (!images.length) return '';
+
   if (images.length === 1) {
     return buildPicture(images[0], alt, 'object-image', false);
   }
 
-  const slides = images.map((src, i) => `
-    <div class="carousel__slide">
-      ${buildPicture(src, `${alt} (${i + 1}/${images.length})`, 'carousel__img', i > 0)}
-    </div>`).join('');
+  const pictures = images.map((src, i) =>
+    buildPicture(src, `${alt} (${i + 1} / ${images.length})`, 'object-image', i > 0)
+  ).join('');
 
-  const dots = images.map((_, i) => `
-    <button class="carousel__dot${i === 0 ? ' is-active' : ''}"
-            aria-label="Image ${i + 1}"
-            data-index="${i}"></button>`).join('');
-
-  return `
-    <div class="carousel" data-carousel>
-      <div class="carousel__track">${slides}</div>
-      <button class="carousel__btn carousel__btn--prev" aria-label="Previous">&#8249;</button>
-      <button class="carousel__btn carousel__btn--next" aria-label="Next">&#8250;</button>
-      <div class="carousel__dots" role="tablist">${dots}</div>
-    </div>`;
-}
-
-/**
- * Wire carousel controls after its HTML is in the DOM.
- * @param {Document|HTMLElement} [root]
- */
-export function initCarousel(root = document) {
-  const el = root.querySelector('[data-carousel]');
-  if (!el) return;
-
-  const track = el.querySelector('.carousel__track');
-  const dots  = Array.from(el.querySelectorAll('.carousel__dot'));
-  const total = dots.length;
-  let cur = 0;
-
-  function goTo(n) {
-    cur = ((n % total) + total) % total;
-    track.style.transform = `translateX(-${cur * 100}%)`;
-    dots.forEach((d, i) => d.classList.toggle('is-active', i === cur));
-  }
-
-  el.querySelector('.carousel__btn--prev')?.addEventListener('click', () => goTo(cur - 1));
-  el.querySelector('.carousel__btn--next')?.addEventListener('click', () => goTo(cur + 1));
-  dots.forEach(d => d.addEventListener('click', () => goTo(Number(d.dataset.index))));
-
-  // Touch swipe
-  let sx = 0;
-  track.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
-  track.addEventListener('touchend',   e => {
-    const dx = e.changedTouches[0].clientX - sx;
-    if (Math.abs(dx) > 44) goTo(dx < 0 ? cur + 1 : cur - 1);
-  });
-
-  // Keyboard
-  el.setAttribute('tabindex', '0');
-  el.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft')  goTo(cur - 1);
-    if (e.key === 'ArrowRight') goTo(cur + 1);
-  });
+  return `<div class="media-stack">${pictures}</div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -272,12 +226,56 @@ function initLangSwitcher() {
   });
 }
 
+
+// ═══════════════════════════════════════════════════════════════════
+//  THEME (light / dark)
+// ═══════════════════════════════════════════════════════════════════
+
+const THEME_KEY = 'theme';
+
+/**
+ * Apply the saved theme (or 'light' by default) to <html data-theme>.
+ * Call once at boot before anything renders to avoid a flash.
+ */
+function applyTheme() {
+  const saved = localStorage.getItem(THEME_KEY) || 'light';
+  document.documentElement.dataset.theme = saved;
+  _syncThemeBtn(saved);
+}
+
+/** Toggle between light and dark, persist the choice. */
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem(THEME_KEY, next);
+  _syncThemeBtn(next);
+}
+
+/** Update the button icon and aria-label to reflect current theme. */
+function _syncThemeBtn(theme) {
+  const btn = document.getElementById('js-theme-btn');
+  if (!btn) return;
+  const t = T[getLang()];
+  if (theme === 'dark') {
+    btn.textContent  = '☀️';
+    btn.setAttribute('aria-label', t.themeLight);
+    btn.title        = t.themeLight;
+  } else {
+    btn.textContent  = '🌙';
+    btn.setAttribute('aria-label', t.themeDark);
+    btn.title        = t.themeDark;
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
+  applyTheme();
   syncLangUI();
   initLangSwitcher();
+  document.getElementById('js-theme-btn')
+    ?.addEventListener('click', toggleTheme);
   initRouter();
 });

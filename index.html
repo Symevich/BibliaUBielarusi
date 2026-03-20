@@ -39,12 +39,22 @@
         Біблія ў Беларусі
       </a>
 
-      <!-- Language switcher -->
-      <nav class="lang-switcher" aria-label="Language / Мова / Язык">
-        <button class="lang-btn" data-lang="be" aria-pressed="true">BE</button>
-        <button class="lang-btn" data-lang="ru" aria-pressed="false">RU</button>
-        <button class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
-      </nav>
+      <!-- Controls: theme toggle + language switcher -->
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+
+        <button class="theme-btn" id="js-theme-btn"
+                aria-label="Switch to dark theme" title="Toggle theme">
+          <!-- icon swapped by JS -->
+          ☀️
+        </button>
+
+        <nav class="lang-switcher" aria-label="Language / Мова / Язык">
+          <button class="lang-btn" data-lang="be" aria-pressed="true">BE</button>
+          <button class="lang-btn" data-lang="ru" aria-pressed="false">RU</button>
+          <button class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+        </nav>
+
+      </div>
 
     </div>
   </header>

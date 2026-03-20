@@ -6,7 +6,7 @@
  * Renders:
  *   1. Breadcrumb nav (All Sections → Section N)
  *   2. Exhibit title + provenance/date (loc.info)
- *   3. Image — single <picture> or multi-image carousel (_p1/_p2…)
+ *   3. Images — all images stacked vertically in the media box
  *   4. Audio play button (only when obj.audio is non-empty)
  *   5. Description text (HTML trusted from the content team)
  *   6. Prev / Next navigation within the section
@@ -15,7 +15,7 @@
  *   • obj.id is sometimes a string ("1A", "intro_1") and sometimes a
  *     number (31). All comparisons use String().
  *   • img is always an array.  _ico.webp entries are thumbnails only —
- *     they are stripped before building the carousel.
+ *     they are stripped before rendering — _ico entries are thumbnails only.
  *   • obj.audio is a bare filename (e.g. "track-5.mp3") or an empty
  *     string.  We prepend "assets/audio/" here.
  *   • Section 0 is the Preface: one object, id="0". Its back link
@@ -33,8 +33,8 @@
 
 import { getLang, T }               from '../store.js';
 import { getApp, setLoading, setError,
-         fetchSection, buildCarousel,
-         initCarousel, splitImages } from '../app.js';
+         fetchSection, buildImages,
+         splitImages } from '../app.js';
 import { load as playerLoad,
          toggle as playerToggle,
          isPlaying, currentSrc }    from '../player.js';
@@ -93,7 +93,7 @@ function _paint(obj, prev, next, sectionId, lang, t) {
 
   // Images
   const { display } = splitImages(obj.img);
-  const mediaHTML   = buildCarousel(display, loc.title || t.altImage);
+  const mediaHTML   = buildImages(display, loc.title || t.altImage);
 
   // Audio
   const audioFile = (obj.audio || '').trim();
@@ -142,7 +142,6 @@ function _paint(obj, prev, next, sectionId, lang, t) {
     </div>`;
 
   // Post-render wiring
-  initCarousel(getApp());
   if (audioSrc) _wireAudioBtn(audioSrc, loc.title, t);
 }
 

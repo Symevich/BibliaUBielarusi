@@ -22,7 +22,6 @@
    11. Home — hero + section list
    12. Section view — intro + collapsible + object cards
    13. Object detail — title, media, audio trigger, text, prev/next
-   14. Carousel
    15. Prose (exhibit description HTML)
    16. Persistent audio player footer
    17. Responsive
@@ -31,59 +30,69 @@
 
 /* ── 1. Custom properties ─────────────────────────────────────────── */
 :root {
-  /* Background layers */
+  /* ── Shared / structural ── */
+  --ff-display: 'Cormorant Garamond', Georgia, serif;
+  --ff-body:    'Inter', system-ui, sans-serif;
+
+  --header-h:   70px;
+  --player-h:   68px;
+  --max-w:      740px;
+  --max-w-wide: 960px;
+  --px:         20px;
+
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 14px;
+
+  --t-fast: .14s ease;
+  --t-med:  .26s ease;
+  --t-slow: .42s ease;
+
+  /* ── Light theme (default) ── */
+  --bg:         #f7f4ee;
+  --bg-2:       #eee9de;
+  --bg-3:       #e5dfd3;
+  --surface:    #ede7d9;
+  --surface-2:  #e2dace;
+
+  --border:     rgba(140, 100, 20, 0.18);
+  --border-2:   rgba(140, 100, 20, 0.35);
+
+  --gold:       #8c6414;
+  --gold-lt:    #a87820;
+  --gold-dim:   rgba(140, 100, 20, 0.10);
+
+  --text:       #1a1610;
+  --text-2:     #4a3e2a;
+  --text-3:     #8a7a60;
+
+  --error:      #c0392b;
+
+  --shadow-sm: 0 2px 8px  rgba(0,0,0,.10);
+  --shadow-md: 0 6px 24px rgba(0,0,0,.14);
+}
+
+/* ── Dark theme ── */
+[data-theme="dark"] {
   --bg:         #0f0e0c;
   --bg-2:       #181612;
   --bg-3:       #201e18;
   --surface:    #252118;
   --surface-2:  #2e2b21;
 
-  /* Borders */
   --border:     rgba(200, 160, 40, 0.14);
   --border-2:   rgba(200, 160, 40, 0.30);
 
-  /* Gold accent */
   --gold:       #c8a028;
   --gold-lt:    #ddb94a;
   --gold-dim:   rgba(200, 160, 40, 0.10);
 
-  /* Text */
   --text:       #ede5d0;
   --text-2:     #b0a080;
   --text-3:     #6e6450;
 
-  /* Feedback */
-  --error:      #c0392b;
-
-  /* Typefaces */
-  --ff-display: 'Cormorant Garamond', Georgia, serif;
-  --ff-body:    'Inter', system-ui, sans-serif;
-
-  /* Layout
-     --max-w:      content column width (text, object detail, home list)
-     --max-w-wide: wider column (section listing with many cards)
-     Both are px values so they work correctly at all viewport sizes.    */
-  --header-h:   70px;
-  --player-h:   68px;
-  --max-w:      740px;
-  --max-w-wide: 960px;
-
-  /* Horizontal page padding — consistent gutter at every breakpoint */
-  --px: 20px;
-
-  /* Radii */
-  --r-sm: 4px;
-  --r-md: 8px;
-  --r-lg: 14px;
-
-  /* Shadows */
   --shadow-sm: 0 2px 8px  rgba(0,0,0,.35);
   --shadow-md: 0 6px 24px rgba(0,0,0,.50);
-
-  /* Transitions */
-  --t-fast: .14s ease;
-  --t-med:  .26s ease;
-  --t-slow: .42s ease;
 }
 
 
@@ -108,12 +117,10 @@ body {
   min-height:  100dvh;
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar       { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
 
-/* Focus ring */
 :focus-visible {
   outline: 2px solid var(--gold);
   outline-offset: 3px;
@@ -140,7 +147,7 @@ body {
   position: fixed; top: 0; left: 0; right: 0;
   height: var(--header-h);
   z-index: 200;
-  background: rgba(15, 14, 12, 0.90);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
@@ -150,6 +157,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   height: 100%;
   max-width: var(--max-w-wide);
   margin: 0 auto;
@@ -160,7 +168,6 @@ body {
   font-family: var(--ff-display);
   font-size: 20px; font-weight: 700;
   color: var(--text); letter-spacing: .01em;
-  /* Allow the logo to shrink so the lang switcher always fits */
   flex-shrink: 1;
   min-width: 0;
   overflow: hidden;
@@ -170,14 +177,13 @@ body {
 }
 .site-header__logo:hover { color: var(--gold); }
 
-/* Language switcher pill */
 .lang-switcher {
   display: flex; align-items: center; gap: 2px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 3px;
-  flex-shrink: 0; /* never shrink — buttons must always be tappable */
+  flex-shrink: 0;
 }
 
 .lang-btn {
@@ -189,6 +195,25 @@ body {
 }
 .lang-btn:hover     { color: var(--text-2); }
 .lang-btn.is-active { background: var(--gold); color: var(--bg); }
+/* ── Theme toggle button ──────────────────────────────────────────── */
+.theme-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+.theme-btn:hover {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+
 
 
 /* ── 6. Main / #app viewport ──────────────────────────────────────── */
@@ -212,7 +237,6 @@ body {
 .view--object  { max-width: var(--max-w); }
 .view--welcome { max-width: var(--max-w); }
 
-/* ── Welcome page ─────────────────────────────────────────────────── */
 .hero--welcome {
   min-height: calc(100vh - var(--header-h) - 80px);
   display: flex; flex-direction: column;
@@ -270,16 +294,13 @@ body {
 /* ── 9. Shared button ─────────────────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
-  /* padding: 10px 24px; */
   border-radius: var(--r-md);
   font-size: 14px; font-weight: 600; letter-spacing: .06em;
   border: none; cursor: pointer;
   transition: background var(--t-fast), transform var(--t-fast),
               box-shadow var(--t-fast);
 }
-.btn--primary {
-  background: var(--gold); color: var(--bg);
-}
+.btn--primary { background: var(--gold); color: var(--bg); }
 .btn--primary:hover {
   background: var(--gold-lt);
   box-shadow: 0 4px 16px rgba(200,160,40,.3);
@@ -301,10 +322,7 @@ body {
   border-bottom: 1px solid transparent;
   transition: color var(--t-fast), border-color var(--t-fast);
 }
-.breadcrumb__link:hover {
-  color: var(--gold);
-  border-color: var(--gold);
-}
+.breadcrumb__link:hover { color: var(--gold); border-color: var(--gold); }
 .breadcrumb__sep { color: var(--text-3); }
 
 
@@ -328,8 +346,6 @@ body {
   color: var(--gold);
 }
 
-/* Home section list reuses .object-grid and .object-card — no extra rules needed */
-
 
 /* ── 12. Section view — intro + collapsible + object cards ────────── */
 .section-intro {
@@ -346,7 +362,6 @@ body {
 }
 .section-intro__text { max-width: 680px; }
 
-/* Collapsible long intro text (section 5 and others) */
 .collapsible .collapsible__body {
   max-height: 11em;
   overflow: hidden;
@@ -373,7 +388,6 @@ body {
 }
 .collapsible__toggle:hover { color: var(--gold-lt); }
 
-/* Object / section card list */
 .object-grid {
   display: flex; flex-direction: column; gap: 10px;
 }
@@ -383,17 +397,17 @@ body {
   padding: 10px 12px;
   border-radius: var(--r-md);
   transition: background var(--t-fast);
-  /* Ensure the card itself never overflows its container */
   min-width: 0;
   min-height: 80px;
 }
 .object-card:hover { background: var(--surface); }
 
-/* Circular image */
 .object-card__img-wrap {
   flex-shrink: 0;
   width: 85px;
   background: #ffffff;
+  border-radius: var(--r-sm);
+  overflow: hidden;
 }
 .object-card__thumb {
   width: 100%; height: 100%;
@@ -404,21 +418,14 @@ body {
   width: 100%; height: 100%; background: var(--surface);
 }
 
-.object-card__body {
-  flex: 1;
-  min-width: 0; /* critical — allows text-overflow to work inside flex child */
-}
-
-.object-card__num {
-  display: none;
-}
+.object-card__body { flex: 1; min-width: 0; }
+.object-card__num  { display: none; }
 
 .object-card__title {
   font-family: var(--ff-display);
   font-size: 22px; font-weight: 600; line-height: 1.3;
   text-transform: uppercase;
   color: var(--text);
-  /* Allow 2 lines before clipping */
   display: -webkit-box;
   --webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -458,28 +465,35 @@ body {
   margin-bottom: 24px;
 }
 
-/* Media wrapper — no fixed height, let the image dictate its own size */
+/*
+ * Media wrapper — transparent background so nothing shows around
+ * the image edges. The image itself dictates the visual boundary.
+ * No mix-blend-mode: images are displayed as-is on a transparent base.
+ */
 .object-detail__media {
   margin: 0 auto 24px;
-  border-radius: var(--r-lg); overflow: hidden;
-  background: var(--bg-3);
-  box-shadow: var(--shadow-md);
-  max-width: fit-content;
+  width: max-content;
 }
 
-/* Single image — full width, natural height, no cropping */
+/* Single image — round the picture element directly */
+.object-detail__media > picture {
+  display: block;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
 .object-image {
   width: 100%;
   height: auto;
   display: block;
   object-fit: contain;
   max-height: 500px;
+  border-radius: var(--r-lg);
 }
 
-/* Description text */
 .object-detail__text { margin-top: 28px; }
 
-/* Prev / Next nav */
 .obj-nav {
   display: flex; align-items: center; justify-content: space-between;
   gap: 8px;
@@ -489,7 +503,6 @@ body {
 
 .obj-nav__btn {
   display: inline-flex; align-items: center; gap: 5px;
-  /* Each button takes up to 40% — leaves room for the back link in the middle */
   max-width: 40%;
   min-width: 0;
   padding: 8px 12px;
@@ -505,7 +518,6 @@ body {
 }
 .obj-nav__arrow { font-size: 18px; line-height: 1; flex-shrink: 0; }
 .obj-nav__label {
-  /* Truncate long exhibit titles gracefully */
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   min-width: 0;
 }
@@ -518,8 +530,46 @@ body {
   transition: color var(--t-fast);
 }
 .obj-nav__back:hover { color: var(--gold); }
+/* ── Section navigation (prev / next section) ─────────────────────── */
+.section-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+  margin-top: 44px; padding-top: 26px;
+  border-top: 1px solid var(--border);
+}
 
-/* Audio trigger button */
+.section-nav__btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  max-width: 44%;
+  min-width: 0;
+  padding: 8px 12px;
+  font-size: 13px; font-weight: 600; letter-spacing: .03em;
+  color: var(--text-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+}
+.section-nav__btn:hover {
+  color: var(--gold); border-color: var(--gold);
+  background: var(--gold-dim);
+}
+.section-nav__arrow { font-size: 18px; line-height: 1; flex-shrink: 0; }
+.section-nav__label {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.section-nav__home {
+  font-size: 11px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-3);
+  white-space: nowrap; flex-shrink: 0;
+  padding: 4px 6px;
+  transition: color var(--t-fast);
+}
+.section-nav__home:hover { color: var(--gold); }
+
+
+
 .audio-trigger {
   display: flex; justify-content: center;
   margin: 20px 0 28px;
@@ -544,77 +594,33 @@ body {
   width: 15px; height: 15px;
   fill: var(--gold); stroke: none; flex-shrink: 0;
 }
-/* Default: show play, hide pause */
 .audio-trigger__btn .audio-trigger__icon--pause { display: none; }
-/* Playing: show pause, hide play */
 .audio-trigger__btn.is-playing .audio-trigger__icon--play  { display: none; }
 .audio-trigger__btn.is-playing .audio-trigger__icon--pause { display: block; }
 
 
-/* ── 14. Carousel ─────────────────────────────────────────────────── */
-.carousel {
-  position: relative; overflow: hidden;
-  background: var(--bg-3);
-  max-height: 500px;
-  max-width: fit-content;
-}
+/* ── 14. Multiple images — stacked in media box ──────────────────── */
 
-.carousel__track {
+/*
+ * When an exhibit has several images they are rendered one below the
+ * other inside .media-stack.  Each image is independent — no
+ * interaction, no controls.  A thin gap separates them.
+ */
+.media-stack {
   display: flex;
-  transition: transform .36s cubic-bezier(.4, 0, .2, 1);
-  will-change: transform;
-}
-@media (prefers-reduced-motion: reduce) {
-  .carousel__track { transition: none; }
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
 }
 
-.carousel__slide {
-  min-width: 100%;
-}
-
-.carousel__img {
-  display: block;
-  object-fit: contain;
-  max-height: 500px;
-}
-
-.carousel__btn {
-  position: absolute; top: 50%; transform: translateY(-50%);
-  width: 38px; height: 38px;
-  background: rgba(15, 14, 12, .72);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  color: var(--text); font-size: 22px; line-height: 1;
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(4px);
-  z-index: 2;
-  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
-}
-
-.carousel__btn:hover {
-  background: rgba(200, 160, 40, .2);
-  border-color: var(--gold); color: var(--gold);
-}
-.carousel__btn--prev { left: 10px; }
-.carousel__btn--next { right: 10px; }
-
-.carousel__dots {
-  display: flex; justify-content: center; gap: 7px;
-  padding: 10px 0 8px;
-  background: var(--surface);
-}
-.carousel__dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--text-3);
-  border: none; padding: 0; cursor: pointer;
-  transition: background var(--t-fast), transform var(--t-fast);
-}
-.carousel__dot.is-active {
-  background: var(--gold); transform: scale(1.35);
-}
+/*
+ * Both the single-image <picture> (placed directly in
+ * .object-detail__media) and each <picture> inside .media-stack share
+ * the same image rules via .object-image on their <img>.
+ */
 
 
-/* ── 15. Prose (exhibit description HTML) ─────────────────────────── */
+/* ── 15. Prose ────────────────────────────────────────────────────── */
 .prose {
   font-size: 17px; line-height: 1.8;
   color: var(--text-2);
@@ -623,7 +629,6 @@ body {
 .prose p:last-child { margin-bottom: 0; }
 .prose strong      { color: var(--text); font-weight: 600; }
 .prose em          { font-style: italic; }
-/* Empty <p></p> pairs appear in section-1 data — collapse them */
 .prose p:empty     { display: none; }
 
 
@@ -632,7 +637,7 @@ body {
   position: fixed; bottom: 0; left: 0; right: 0;
   height: var(--player-h);
   z-index: 300;
-  background: rgba(12, 11, 9, .97);
+  background: color-mix(in srgb, var(--bg) 97%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--border-2);
@@ -646,7 +651,6 @@ body {
   margin: 0 auto; padding: 0 var(--px);
 }
 
-/* Track title */
 .audio-player__meta {
   flex-shrink: 0; max-width: 180px; min-width: 0; overflow: hidden;
 }
@@ -658,12 +662,10 @@ body {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* Controls row */
 .audio-player__controls {
   flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0;
 }
 
-/* Round icon buttons (play, mute) */
 .ap-btn {
   flex-shrink: 0;
   width: 34px; height: 34px;
@@ -680,21 +682,17 @@ body {
 }
 .ap-btn.is-muted { color: var(--text-3); }
 
-/* SVG icons inside the footer play button */
 .ap-icon {
   width: 13px; height: 13px;
   fill: currentColor; stroke: none; flex-shrink: 0;
 }
 
-/* Footer play button: show play icon by default, pause when playing */
 .ap-btn--play .ap-icon--pause            { display: none; }
 .ap-btn--play.is-playing .ap-icon--play  { display: none; }
 .ap-btn--play.is-playing .ap-icon--pause { display: block; }
 
-/* Mute: dim the volume arc when muted */
 .ap-btn.is-muted .ap-vol-on { opacity: 0; }
 
-/* Time display */
 .ap-time {
   font-size: 12px; color: var(--text-2);
   white-space: nowrap; flex-shrink: 0;
@@ -703,7 +701,6 @@ body {
 }
 .ap-time__sep { color: var(--text-3); }
 
-/* Range input shared style */
 .ap-seek,
 .ap-volume {
   appearance: none; -webkit-appearance: none;
@@ -715,14 +712,12 @@ body {
 .ap-seek   { flex: 1; min-width: 60px; }
 .ap-volume { width: 68px; flex-shrink: 0; }
 
-/* Webkit thumb */
 .ap-seek::-webkit-slider-thumb,
 .ap-volume::-webkit-slider-thumb {
   appearance: none; -webkit-appearance: none;
   width: 12px; height: 12px; border-radius: 50%;
   background: var(--gold); cursor: pointer;
 }
-/* Firefox thumb */
 .ap-seek::-moz-range-thumb,
 .ap-volume::-moz-range-thumb {
   width: 12px; height: 12px; border-radius: 50%;
@@ -732,94 +727,60 @@ body {
 
 /* ── 17. Responsive ───────────────────────────────────────────────── */
 
-/* ── Tablet (≤ 768px) ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  :root {
-    --header-h: 52px;
-    --px: 16px;
-  }
+  :root { --header-h: 52px; --px: 16px; }
 
-  /* Header */
-  .site-header__logo { font-size: 18px; }
-
-  /* Object / section cards */
+  .site-header__logo     { font-size: 18px; }
   .object-card__img-wrap { width: 70px; }
   .object-card__title    { font-size: 19px; }
   .object-card__info     { font-size: 13px; }
 }
 
-/* ── Mobile (≤ 480px) ─────────────────────────────────────────────── */
 @media (max-width: 480px) {
-  :root {
-    --header-h: 48px;
-    --player-h: 56px;
-    --px: 14px;
-  }
+  :root { --header-h: 48px; --player-h: 56px; --px: 14px; }
 
-  /* Header — shorter logo to guarantee lang buttons always fit */
   .site-header__logo { font-size: 16px; }
   .lang-btn          { padding: 4px 9px; font-size: 11px; }
 
-  /* Views */
-  .view  { padding: 20px var(--px) 36px; }
+  .view { padding: 20px var(--px) 36px; }
+  .hero { padding: 28px 0 32px; margin-bottom: 24px; }
 
-  /* Hero */
-  .hero  { padding: 28px 0 32px; margin-bottom: 24px; }
-
-  /* Object / section cards — tighter layout */
   .object-card            { gap: 12px; padding: 9px 8px; }
   .object-card__img-wrap  { width: 56px; }
   .object-card__title     { font-size: 17px; }
   .object-card__info      { font-size: 12px; }
   .object-card__arrow     { font-size: 16px; }
 
-  /* Section intro */
-  .section-intro__title   { font-size: 20px; }
-  .section-intro          { margin-bottom: 24px; padding-bottom: 20px; }
+  .section-intro__title { font-size: 20px; }
+  .section-intro        { margin-bottom: 24px; padding-bottom: 20px; }
 
-  /* Object detail */
-  .object-detail__title   { font-size: 22px; }
-  .object-detail__info    { font-size: 12px; }
-  .object-detail__text    { margin-top: 20px; }
+  .object-detail__title { font-size: 22px; }
+  .object-detail__info  { font-size: 12px; }
+  .object-detail__text  { margin-top: 20px; }
 
-  /* Prose text */
   .prose { font-size: 15px; }
 
-  /* Carousel buttons — easier to tap */
-  .carousel__btn { width: 34px; height: 34px; font-size: 18px; }
 
-  /* Breadcrumb */
   .breadcrumb { font-size: 11px; margin-bottom: 20px; }
 
-  /* Prev / Next nav — stack vertically on very small screens */
-  .obj-nav {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-  }
-  .obj-nav__btn  { max-width: none; font-size: 12px; padding: 7px 12px; }
-  .obj-nav__back { order: -1; width: 100%; text-align: center; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .obj-nav, .section-nav { flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .obj-nav__btn, .section-nav__btn  { max-width: none; font-size: 12px; padding: 7px 12px; }
+  .obj-nav__back, .section-nav__home { order: -1; width: 100%; text-align: center; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
 
-  /* Audio trigger button */
   .audio-trigger__btn { padding: 10px 20px; font-size: 12px; }
 
-  /* Footer player — hide track title and volume on small screens */
-  .audio-player__meta { display: none; }
-  .ap-volume          { display: none; }
-  /* Tighten gap so seek bar gets maximum width */
+  .audio-player__meta     { display: none; }
+  .ap-volume              { display: none; }
   .audio-player__controls { gap: 8px; }
 }
 
-/* ── Very small (≤ 360px) ─────────────────────────────────────────── */
 @media (max-width: 360px) {
   :root { --px: 10px; }
 
   .site-header__logo     { font-size: 14px; }
   .lang-btn              { padding: 3px 7px; font-size: 10px; }
-
   .object-card__img-wrap { width: 48px; }
   .object-card__title    { font-size: 15px; }
   .object-card           { gap: 10px; padding: 8px 6px; }
-
   .hero__title           { font-size: 22px; }
 }
