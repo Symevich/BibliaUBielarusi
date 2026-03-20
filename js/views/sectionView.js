@@ -2,36 +2,50 @@
  * sectionView.js — Section listing page
  *
  * Route: index.html?section=N
+ *
+ * Improvements over previous version:
+ *   • Accepts routeId; checks isCurrentRoute() after every await so a
+ *     rapid navigation never writes stale content to #app.
+ *   • Spinner skipped when the section data is already in the cache —
+ *     returning to a visited section is now instant and flash-free.
+ *   • 'use strict' removed — redundant in ES modules.
  */
 
-'use strict';
-
-import { getLang, T }                from '../store.js';
+import { getLang, T, getCachedSection }    from '../store.js';
 import { getApp, setLoading, setError,
-         fetchSections, fetchSection, buildPicture,
-         splitImages }               from '../app.js';
+         fetchSections, fetchSection,
+         buildPicture, splitImages }       from '../app.js';
+import { isCurrentRoute }                  from '../router.js';
 
-const INTRO_CLAMP = 600;
+const INTRO_CLAMP = 600; // characters; intro text longer than this gets a toggle
 
 // ─── Public ────────────────────────────────────────────────────────
 
-/** @param {string} sectionId  URL param value, e.g. "3" */
-export async function renderSection(sectionId) {
+/**
+ * @param {string} sectionId  URL param value, e.g. "3"
+ * @param {number} routeId    Claimed by the router; stale-render guard.
+ */
+export async function renderSection(sectionId, routeId) {
   const lang = getLang();
   const t    = T[lang];
 
   document.title = `${t.section} ${sectionId} — ${t.siteTitle}`;
-  setLoading();
+
+  // Skip spinner flash for cached navigations
+  if (!getCachedSection(sectionId, lang)) setLoading();
 
   try {
     const [objects, allSections] = await Promise.all([
       fetchSection(sectionId, lang),
       fetchSections(),
     ]);
+    if (!isCurrentRoute(routeId)) return;
     _paint(objects, sectionId, allSections, lang, t);
   } catch (err) {
     console.error('[sectionView]', err);
-    setError(t.errorLoad, () => renderSection(sectionId));
+    if (isCurrentRoute(routeId)) {
+      setError(t.errorLoad, () => renderSection(sectionId, routeId));
+    }
   }
 }
 
@@ -47,16 +61,21 @@ function _paint(objects, sectionId, allSections, lang, t) {
   const exhibits = objects.slice(1);
   const loc      = intro[lang] ?? intro.be;
 
+  // Update document title to section's actual title once data arrives
   document.title = `${loc.title} — ${t.siteTitle}`;
 
   const rawText     = loc.text || '';
   const needsToggle = rawText.length > INTRO_CLAMP;
   const introText   = needsToggle
     ? _collapsibleText(rawText, t)
-    : rawText ? `<div class="section-intro__text prose">${rawText}</div>` : '';
+    : rawText
+      ? `<div class="section-intro__text prose">${rawText}</div>`
+      : '';
 
   const cardsHTML = exhibits.length
-    ? `<ul class="object-grid" role="list">${exhibits.map(o => _card(o, sectionId, lang, t)).join('')}</ul>`
+    ? `<ul class="object-grid" role="list">
+        ${exhibits.map(o => _card(o, sectionId, lang, t)).join('')}
+       </ul>`
     : `<p class="notice">${t.noObjects}</p>`;
 
   const navHTML = _sectionNav(allSections, Number(sectionId), lang, t);
@@ -78,7 +97,7 @@ function _paint(objects, sectionId, allSections, lang, t) {
 }
 
 /**
- * Prev / Home / Next navigation bar — mirrors obj-nav in objectView.
+ * Prev / Home / Next navigation bar.
  * Only sections with id > 0 are included in the sequence (0 = Preface).
  */
 function _sectionNav(allSections, currentId, lang, t) {

@@ -3,31 +3,43 @@
  *
  * Route: index.html  (no query params)
  *
- * Renders sections as the same list-row style as object cards:
- * circular cover image + title + object count + chevron.
+ * Improvements over previous version:
+ *   • Accepts routeId from the router. After the async fetchSections()
+ *     call, isCurrentRoute(routeId) is checked before writing to #app.
+ *     This prevents a stale render from overwriting a newer navigation.
+ *   • Spinner is only shown when sections.json has not yet been fetched
+ *     this session, avoiding a flash for the common case of returning
+ *     home from a section or object page.
+ *   • 'use strict' removed — redundant in ES modules.
  */
 
-'use strict';
-
-import { getLang, T }                 from '../store.js';
+import { getLang, T }                        from '../store.js';
 import { getApp, setLoading, setError,
-         fetchSections, buildPicture } from '../app.js';
+         fetchSections, buildPicture,
+         hasSectionsCache }                  from '../app.js';
+import { isCurrentRoute }                    from '../router.js';
 
 // ─── Public ────────────────────────────────────────────────────────
 
-export async function renderHome() {
+/**
+ * @param {number} routeId  Claimed by the router; used for stale-render guard.
+ */
+export async function renderHome(routeId) {
   const lang = getLang();
   const t    = T[lang];
 
   document.title = t.siteTitle;
-  setLoading();
+
+  // Avoid spinner flash when returning to an already-cached home page
+  if (!hasSectionsCache()) setLoading();
 
   try {
     const sections = await fetchSections();
+    if (!isCurrentRoute(routeId)) return;   // navigation moved on — bail
     _paint(sections, lang, t);
   } catch (err) {
     console.error('[homeView]', err);
-    setError(t.errorLoad, renderHome);
+    if (isCurrentRoute(routeId)) setError(t.errorLoad, () => renderHome(routeId));
   }
 }
 

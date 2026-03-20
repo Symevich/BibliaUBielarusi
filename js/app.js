@@ -1,31 +1,31 @@
 /**
- * app.js — Entry point and shared utilities
+ * app.js — SPA entry point and shared utilities
  *
  * Responsibilities:
  *   • Boot the router on DOMContentLoaded.
  *   • Wire language-switcher buttons in the static header.
- *   • Export shared helpers used by all views:
- *       fetchSections()    fetch + cache data/sections.json
- *       fetchSection()     fetch + cache a section's object array
- *       resolveImg()       "img/5.webp" → "assets/img/5.webp"
- *       buildPicture()     <picture> WebP + JPG fallback HTML string
- *       splitImages()      separate _ico thumbnails from display images
- *       buildImages()      render all images stacked in the media box
- *       setLoading()       show spinner in #app
- *       setError()         show error + retry button in #app
- *       getApp()           return the #app element
+ *   • Export shared helpers used by all views.
+ *
+ * Improvements over previous version:
+ *   • Theme logic delegated to utils/theme.js — no more duplication
+ *     with welcomeView.js.
+ *   • syncThemeBtn() re-called after language switch so the button
+ *     aria-label updates to the new locale immediately.
+ *   • hasSectionsCache() exported so views can skip setLoading()
+ *     on second and subsequent visits to a cached route.
+ *   • 'use strict' removed — ES modules are always strict mode.
  *
  * Import graph (no cycles):
- *   app.js  ←  store.js, router.js
- *   views   ←  app.js, store.js, player.js
+ *   app.js  ←  store.js, router.js, utils/theme.js
+ *   views   ←  app.js, store.js, player.js, router.js
  *   router  ←  views (dynamic import only)
  */
-
-'use strict';
 
 import { getLang, setLang, clearSectionCache,
          getCachedSection, setCachedSection, T } from './store.js';
 import { initRouter }                            from './router.js';
+import { applyTheme, toggleTheme,
+         syncThemeBtn }                          from './utils/theme.js';
 
 // ═══════════════════════════════════════════════════════════════════
 //  DATA FETCHING
@@ -33,6 +33,13 @@ import { initRouter }                            from './router.js';
 
 /** Module-level cache for data/sections.json */
 let _sectionsCache = null;
+
+/**
+ * Returns true if sections.json has already been fetched this session.
+ * Views use this to decide whether to show a loading spinner.
+ * @returns {boolean}
+ */
+export function hasSectionsCache() { return _sectionsCache !== null; }
 
 /**
  * Fetch the lightweight section metadata index.
@@ -52,7 +59,7 @@ export async function fetchSections() {
  * Uses the store's Map as a per-session cache.
  *
  * Fallback chain: requested lang → 'be'.
- * If /ru/section-N.json does not exist yet, the BE content is shown.
+ * If /ru/section-N.json does not exist yet, BE content is shown.
  *
  * @param {string|number} sectionId
  * @param {string}        lang       'be' | 'ru' | 'en'
@@ -94,10 +101,10 @@ export function resolveImg(jsonPath) {
 
 /**
  * Build a <picture> element string: WebP source + JPG fallback img.
- * @param {string}  src       Resolved asset path (WebP).
- * @param {string}  alt       Alt text.
- * @param {string}  [cls]     CSS class(es) for the <img>.
- * @param {boolean} [lazy]    Use loading="lazy". Default true.
+ * @param {string}  src     Resolved asset path (WebP).
+ * @param {string}  alt     Alt text.
+ * @param {string}  [cls]   CSS class(es) for the <img>.
+ * @param {boolean} [lazy]  Use loading="lazy". Default true.
  * @returns {string}
  */
 export function buildPicture(src, alt, cls = '', lazy = true) {
@@ -138,14 +145,10 @@ export function splitImages(imgArray) {
  * Render all display images for an exhibit inside the media box.
  *
  * - Single image  → plain <picture class="object-detail__media-single">
- * - Multiple images → <div class="media-stack"> containing one
- *   <picture> per image, all visible and stacked vertically.
- *   Each image is capped at 500px height via CSS.
+ * - Multiple images → <div class="media-stack"> with one <picture> per image.
  *
- * No JavaScript interaction required.
- *
- * @param {string[]} images   Resolved asset paths (no _ico entries).
- * @param {string}   alt      Base alt text.
+ * @param {string[]} images  Resolved asset paths (no _ico entries).
+ * @param {string}   alt     Base alt text.
  * @returns {string}
  */
 export function buildImages(images, alt) {
@@ -220,51 +223,12 @@ function initLangSwitcher() {
       setLang(next);
       clearSectionCache();
       syncLangUI();
+      // Re-sync the theme button label in the new locale
+      syncThemeBtn(document.documentElement.dataset.theme);
       // Re-render current route in the new language
       import('./router.js').then(m => m.route());
     });
   });
-}
-
-
-// ═══════════════════════════════════════════════════════════════════
-//  THEME (light / dark)
-// ═══════════════════════════════════════════════════════════════════
-
-const THEME_KEY = 'theme';
-
-/**
- * Apply the saved theme (or 'light' by default) to <html data-theme>.
- * Call once at boot before anything renders to avoid a flash.
- */
-function applyTheme() {
-  const saved = localStorage.getItem(THEME_KEY) || 'light';
-  document.documentElement.dataset.theme = saved;
-  _syncThemeBtn(saved);
-}
-
-/** Toggle between light and dark, persist the choice. */
-function toggleTheme() {
-  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-  document.documentElement.dataset.theme = next;
-  localStorage.setItem(THEME_KEY, next);
-  _syncThemeBtn(next);
-}
-
-/** Update the button icon and aria-label to reflect current theme. */
-function _syncThemeBtn(theme) {
-  const btn = document.getElementById('js-theme-btn');
-  if (!btn) return;
-  const t = T[getLang()];
-  if (theme === 'dark') {
-    btn.textContent  = '☀️';
-    btn.setAttribute('aria-label', t.themeLight);
-    btn.title        = t.themeLight;
-  } else {
-    btn.textContent  = '🌙';
-    btn.setAttribute('aria-label', t.themeDark);
-    btn.title        = t.themeDark;
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════════

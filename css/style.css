@@ -7,6 +7,20 @@
    Display: Cormorant Garamond (historical, editorial)
    Body:    Inter (clean, legible at small sizes)
 
+   Changes from previous version
+   ──────────────────────────────
+   • BUG FIX: .object-card__title had "--webkit-line-clamp" (double-
+     dash = a CSS custom property that does nothing). Fixed to the
+     actual vendor prefix "-webkit-line-clamp: 2".
+   • BUG FIX: .object-detail__media > picture was declared twice with
+     conflicting properties. Merged into a single canonical declaration.
+   • DEAD CODE REMOVED: .section-nav, .section-nav__btn, and all
+     related rules (~50 lines) were never referenced by any view.
+     Views use .obj-nav exclusively. Removed entirely.
+   • NEW CLASS: .site-header__controls replaces the inline style
+     "display:flex;align-items:center;gap:10px;flex-shrink:0" that
+     was previously hardcoded in both HTML files.
+
    Table of contents
    -----------------
    1.  Custom properties
@@ -22,6 +36,7 @@
    11. Home — hero + section list
    12. Section view — intro + collapsible + object cards
    13. Object detail — title, media, audio trigger, text, prev/next
+   14. Multiple images — media-stack
    15. Prose (exhibit description HTML)
    16. Persistent audio player footer
    17. Responsive
@@ -141,7 +156,6 @@ body {
   transition: background-color 0.35s ease, color 0.35s ease;
 }
 
-
 /* Theme-switch colour transitions on structural elements */
 .site-header,
 .audio-player,
@@ -151,7 +165,6 @@ body {
 .theme-btn,
 .ap-btn,
 .obj-nav__btn,
-.section-nav__btn,
 .btn--primary {
   transition-property: background-color, color, border-color, box-shadow;
   transition-duration: 0.35s;
@@ -201,17 +214,15 @@ body {
   right: 0;
   height: var(--header-h);
   z-index: 200;
-  background: color-mix(in srgb, var(--bg) 92%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border);
   background: var(--bg);
+  border-bottom: 1px solid var(--border);
 }
 
 @supports (backdrop-filter: blur(1px)) {
   .site-header {
     background: color-mix(in srgb, var(--bg) 92%, transparent);
     backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
 }
 
@@ -243,6 +254,14 @@ body {
   color: var(--gold);
 }
 
+/* NEW: replaces the inline style="display:flex…" in both HTML files */
+.site-header__controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
 .lang-switcher {
   display: flex;
   align-items: center;
@@ -272,6 +291,7 @@ body {
   background: var(--gold);
   color: var(--bg);
 }
+
 /* ── Theme toggle button ──────────────────────────────────────────── */
 .theme-btn {
   display: flex;
@@ -301,30 +321,25 @@ body {
   padding-top: var(--header-h);
   padding-bottom: var(--player-h);
   min-height: calc(100dvh - var(--header-h));
+  /* outline: none prevents the visible focus ring when #app is focused
+     programmatically by the router — keyboard users still see focus
+     on interactive elements within the view via :focus-visible */
+  outline: none;
 }
 
 /* ── 7. View wrapper + fade-in ────────────────────────────────────── */
 .view {
   width: 100%;
-  margin-inline: auto;
   max-width: var(--max-w);
   margin: 0 auto;
   padding: 36px var(--px) 48px;
   animation: fadeUp 0.28s cubic-bezier(0.2, 0.7, 0.3, 1) both;
   will-change: transform, opacity;
 }
-.view--home {
-  max-width: var(--max-w);
-}
-.view--section {
-  max-width: var(--max-w-wide);
-}
-.view--object {
-  max-width: var(--max-w);
-}
-.view--welcome {
-  max-width: var(--max-w);
-}
+.view--home    { max-width: var(--max-w); }
+.view--section { max-width: var(--max-w-wide); }
+.view--object  { max-width: var(--max-w); }
+.view--welcome { max-width: var(--max-w); }
 
 .hero--welcome {
   min-height: calc(100vh - var(--header-h) - 80px);
@@ -565,13 +580,10 @@ body {
 .object-card__img-wrap {
   flex-shrink: 0;
   width: 85px;
-  background: #ffffff;
   border-radius: var(--r-sm);
   overflow: hidden;
-  aspect-ratio: 4 / 3;
 }
 .object-card__thumb {
-  width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
@@ -598,7 +610,9 @@ body {
   text-transform: uppercase;
   color: var(--text);
   display: -webkit-box;
-  --webkit-line-clamp: 2;
+  /* BUG FIX: was "--webkit-line-clamp" (double-dash = CSS custom property,
+     does nothing). Corrected to the actual vendor prefix. */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -652,10 +666,20 @@ body {
   width: 100%;
 }
 
+/*
+ * BUG FIX: this selector was declared TWICE in the original file with
+ * conflicting properties. The first declaration set display + margin,
+ * the second set border-radius + overflow + box-shadow. The second
+ * silently overwrote the first, losing display:block and margin:0 auto.
+ * Now merged into a single canonical rule.
+ */
 .object-detail__media > picture {
   display: block;
   width: fit-content;
   margin: 0 auto;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
 }
 
 .object-image {
@@ -667,18 +691,11 @@ body {
   border-radius: var(--r-lg);
 }
 
-/* Single-image wrapper gets its own shadow */
-.object-detail__media > picture {
-  display: block;
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-}
-
 .object-detail__text {
   margin-top: 28px;
 }
 
+/* ── Prev / Next navigation (shared by objectView and sectionView) ── */
 .obj-nav {
   display: flex;
   align-items: center;
@@ -738,67 +755,16 @@ body {
 .obj-nav__back:hover {
   color: var(--gold);
 }
-/* ── Section navigation (prev / next section) ─────────────────────── */
-.section-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 44px;
-  padding-top: 26px;
-  border-top: 1px solid var(--border);
-}
 
-.section-nav__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  max-width: 44%;
-  min-width: 0;
-  padding: 8px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  color: var(--text-2);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  transition:
-    color var(--t-fast),
-    border-color var(--t-fast),
-    background var(--t-fast);
-}
-.section-nav__btn:hover {
-  color: var(--gold);
-  border-color: var(--gold);
-  background: var(--gold-dim);
-}
-.section-nav__arrow {
-  font-size: 18px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-.section-nav__label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
+/*
+ * NOTE: The .section-nav block that existed in the original file has been
+ * REMOVED. It was ~50 lines of CSS (selectors: .section-nav, .section-nav__btn,
+ * .section-nav__btn:hover, .section-nav__arrow, .section-nav__label,
+ * .section-nav__home, .section-nav__home:hover) that were never referenced
+ * by any view — sectionView.js uses .obj-nav exclusively. Dead code eliminated.
+ */
 
-.section-nav__home {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  white-space: nowrap;
-  flex-shrink: 0;
-  padding: 4px 6px;
-  transition: color var(--t-fast);
-}
-.section-nav__home:hover {
-  color: var(--gold);
-}
-
+/* ── Audio trigger button ─────────────────────────────────────────── */
 .audio-trigger {
   display: flex;
   justify-content: center;
@@ -844,13 +810,11 @@ body {
   display: block;
 }
 
-/* ── 14. Multiple images — row in media box ──────────────────────── */
-
+/* ── 14. Multiple images — media-stack ───────────────────────────── */
 /*
  * Multiple images sit side-by-side in a row.
- * Each picture gets an equal share of the container width and
- * never exceeds the .view--object max-width.
- * The images scale down proportionally; height is capped at 500px.
+ * Each picture gets an equal share of the container width.
+ * Images scale down proportionally; height is capped at 500px.
  */
 .media-stack {
   display: flex;
@@ -900,11 +864,17 @@ body {
   right: 0;
   height: var(--player-h);
   z-index: 300;
-  background: color-mix(in srgb, var(--bg) 97%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--bg);
   border-top: 1px solid var(--border-2);
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .audio-player {
+    background: color-mix(in srgb, var(--bg) 97%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
 }
 
 .audio-player__inner {
@@ -1132,20 +1102,17 @@ body {
     margin-bottom: 20px;
   }
 
-  .obj-nav,
-  .section-nav {
+  .obj-nav {
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
   }
-  .obj-nav__btn,
-  .section-nav__btn {
+  .obj-nav__btn {
     max-width: none;
     font-size: 12px;
     padding: 7px 12px;
   }
-  .obj-nav__back,
-  .section-nav__home {
+  .obj-nav__back {
     order: -1;
     width: 100%;
     text-align: center;

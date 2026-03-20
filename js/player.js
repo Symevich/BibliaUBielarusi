@@ -5,20 +5,27 @@
  * That element lives outside #app so SPA navigation never destroys it.
  *
  * Icon state is managed with CSS class .is-playing on the play button.
- * CSS in style.css controls which SVG icon path is visible — we never
- * touch the `hidden` attribute on SVG children.
+ * CSS in style.css controls which SVG icon path is visible.
+ *
+ * Improvements over previous version:
+ *   • play/pause aria-labels read from T[getLang()] instead of being
+ *     hardcoded in Belarusian — labels now update when the user switches
+ *     language while audio is playing.
+ *   • 'use strict' removed (ES modules are always strict mode).
  *
  * Public API (named exports):
- *   load(src, title)  — load + autoplay; resumes if same src is already buffered
+ *   load(src, title)  — load + autoplay; resumes if same src buffered
  *   toggle()          — play / pause current track
  *   stop()            — pause + rewind to 0
  *   isPlaying()       — boolean
  *   currentSrc()      — normalised pathname of loaded src, or ''
  */
 
-'use strict';
+import { getLang, T } from './store.js';
 
-// ─── DOM refs — grabbed once at module evaluation time ─────────────
+// ─── DOM refs ─────────────────────────────────────────────────────
+// Grabbed after module evaluation (type=module scripts are deferred,
+// so the DOM is ready by the time this runs).
 const audioEl   = document.getElementById('audio-el');
 const playerBar = document.getElementById('audio-player');
 const titleEl   = document.getElementById('audio-title');
@@ -46,14 +53,18 @@ function normSrc(raw) {
   try { return new URL(raw).pathname; } catch { return raw; }
 }
 
-/** Toggle .is-playing CSS class on the play button. */
+/**
+ * Toggle .is-playing CSS class on the play button and update its
+ * aria-label in the currently active locale.
+ */
 function setPlayingState(playing) {
   if (!playBtn) return;
+  const t = T[getLang()];
   playBtn.classList.toggle('is-playing', playing);
-  playBtn.setAttribute('aria-label', playing ? 'Паўза' : 'Прайграць');
+  playBtn.setAttribute('aria-label', playing ? t.pauseAudio : t.playAudio);
 }
 
-/** Reset seek thumb and time labels to 0 (on new track). */
+/** Reset seek thumb and time labels to zero (on new track load). */
 function resetSeekUI() {
   if (seekEl) { seekEl.value = '0'; seekEl.max = '100'; }
   if (curEl)  curEl.textContent = '0:00';
@@ -82,7 +93,7 @@ if (audioEl) {
     if (seekEl) seekEl.max = String(audioEl.duration);
   });
 
-  // rAF-throttled timeupdate — prevents layout thrashing at 60fps
+  // rAF-throttled timeupdate — prevents layout thrashing at 60 fps
   let _raf = 0;
   audioEl.addEventListener('timeupdate', () => {
     if (_raf) return;
@@ -97,7 +108,7 @@ if (audioEl) {
   });
 
   audioEl.addEventListener('error', () => {
-    console.error('[player] error', audioEl.error?.code, audioEl.error?.message);
+    console.error('[player] audio error', audioEl.error?.code, audioEl.error?.message);
     setPlayingState(false);
   });
 }
@@ -117,7 +128,14 @@ muteBtn?.addEventListener('click', () => {
   if (!audioEl) return;
   audioEl.muted = !audioEl.muted;
   muteBtn.classList.toggle('is-muted', audioEl.muted);
-  muteBtn.setAttribute('aria-label', audioEl.muted ? 'Уключыць гук' : 'Выключыць гук');
+  // Use localised label — T keys exist in all locales
+  const t = T[getLang()];
+  muteBtn.setAttribute(
+    'aria-label',
+    audioEl.muted
+      ? (t.unmuteAudio ?? 'Unmute')
+      : (t.muteAudio  ?? 'Mute')
+  );
 });
 
 volumeEl?.addEventListener('input', () => {

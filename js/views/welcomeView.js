@@ -3,47 +3,16 @@
  *
  * Route: welcome.html  (standalone entry point, before the SPA)
  *
- * Renders a full-screen welcome screen with the site title, subtitle,
- * and a "Start" button that navigates the user to index.html.
- * Language switcher in the header works the same way as in the SPA.
+ * Improvements over previous version:
+ *   • Theme logic (applyTheme, toggleTheme, syncThemeBtn) imported from
+ *     utils/theme.js instead of being duplicated here. The ~30 lines of
+ *     identical code that previously lived in both welcomeView.js and
+ *     app.js are now in a single shared module.
+ *   • 'use strict' removed — redundant in ES modules.
  */
 
-'use strict';
-
-import { getLang, setLang, T, LOCALES } from '../store.js';
-
-const THEME_KEY = 'theme';
-
-
-// ─── Theme ─────────────────────────────────────────────────────────
-
-function _applyTheme() {
-  const saved = localStorage.getItem(THEME_KEY) || 'light';
-  document.documentElement.dataset.theme = saved;
-  _syncThemeBtn(saved);
-}
-
-function _toggleTheme() {
-  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-  document.documentElement.dataset.theme = next;
-  localStorage.setItem(THEME_KEY, next);
-  _syncThemeBtn(next);
-}
-
-function _syncThemeBtn(theme) {
-  const btn = document.getElementById('js-theme-btn');
-  if (!btn) return;
-  const t = T[getLang()];
-  if (theme === 'dark') {
-    btn.textContent = '☀️';
-    btn.setAttribute('aria-label', t.themeLight || 'Light theme');
-    btn.title       = t.themeLight || 'Light theme';
-  } else {
-    btn.textContent = '🌙';
-    btn.setAttribute('aria-label', t.themeDark || 'Dark theme');
-    btn.title       = t.themeDark || 'Dark theme';
-  }
-}
+import { getLang, setLang, T, LOCALES }   from '../store.js';
+import { applyTheme, toggleTheme }        from '../utils/theme.js';
 
 // ─── Public ────────────────────────────────────────────────────────
 
@@ -54,12 +23,12 @@ export function renderWelcome() {
   document.title                = t.siteTitle;
   document.documentElement.lang = lang;
 
-  _applyTheme();
+  applyTheme();       // restore persisted theme immediately (no flash)
   _paint(t);
   _syncLangUI();
   _initLangSwitcher();
   document.getElementById('js-theme-btn')
-    ?.addEventListener('click', _toggleTheme);
+    ?.addEventListener('click', toggleTheme);
 }
 
 // ─── Private ───────────────────────────────────────────────────────
@@ -91,7 +60,7 @@ function _syncLangUI() {
   document.documentElement.lang = lang;
 }
 
-/** Wire the language buttons so switching re-renders in the new locale. */
+/** Wire language buttons so switching re-renders the page in the new locale. */
 function _initLangSwitcher() {
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.addEventListener('click', () => {

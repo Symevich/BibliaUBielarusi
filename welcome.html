@@ -1,53 +1,57 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="be">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Біблія ў Беларусі — аўдыягід па выставе"
-    />
-    <title>Біблія ў Беларусі</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Біблія ў Беларусі — аўдыягід па выставе" />
+  <title>Біблія ў Беларусі</title>
 
-    <!-- Preconnect to Google Fonts CDN -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!--
-    Cormorant Garamond  — display / headings (editorial, historical feel)
+  <!-- Preconnect to Google Fonts CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!--
+    Cormorant Garamond — display / headings (editorial, historical feel)
     Inter               — body / UI (clean, legible at small sizes)
   -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
 
-    <link rel="stylesheet" href="css/style.css" />
-  </head>
-  <body>
-    <!-- ─── Skip navigation (accessibility) ──────────────────────── -->
-    <a class="skip-link" href="#app">Skip to content</a>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
 
-    <!-- ─── Persistent site header ───────────────────────────────── -->
-    <!--
+  <!-- ─── Skip navigation (accessibility) ──────────────────────── -->
+  <a class="skip-link" href="#app">Skip to content</a>
+
+  <!-- ─── Persistent site header ───────────────────────────────── -->
+  <!--
     Language buttons call renderWelcome() after persisting the new locale
     so the welcome text updates in place without a page reload.
+
+    Identical structure to index.html for shared CSS. If using a build
+    system, extract this to a partial/include.
   -->
   <header class="site-header" role="banner">
     <div class="site-header__inner">
 
-      <!-- Logo / home link — SPA-navigates, never reloads -->
+      <!-- Logo / home link -->
       <a class="site-header__logo" href="index.html"
          aria-label="Біблія ў Беларусі — галоўная">
         Біблія ў Беларусі
       </a>
 
-      <!-- Controls: theme toggle + language switcher -->
-      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <!--
+        Controls: theme toggle + language switcher.
+        Uses .site-header__controls class (not inline style).
+        Initial icon 🌙 = "switch to dark" — correct for light-theme default.
+      -->
+      <div class="site-header__controls">
 
         <button class="theme-btn" id="js-theme-btn"
-                aria-label="Switch to dark theme" title="Toggle theme">
-          <!-- icon swapped by JS -->
-          ☀️
+                aria-label="Toggle theme" title="Toggle theme">
+          🌙
         </button>
 
         <nav class="lang-switcher" aria-label="Language / Мова / Язык">
@@ -61,14 +65,15 @@
     </div>
   </header>
 
-    <!-- ─── Welcome view renders here ────────────────────────────── -->
-    <main id="app" tabindex="-1" role="main">
-      <!-- Populated by welcomeView.js on DOMContentLoaded -->
-    </main>
+  <!-- ─── Welcome view renders here ────────────────────────────── -->
+  <main id="app" tabindex="-1" role="main">
+    <!-- Populated by welcomeView.js on DOMContentLoaded -->
+  </main>
 
-    <script type="module">
-      import { renderWelcome } from './js/views/welcomeView.js';
-      document.addEventListener('DOMContentLoaded', renderWelcome);
-    </script>
-  </body>
+  <script type="module">
+    import { renderWelcome } from './js/views/welcomeView.js';
+    document.addEventListener('DOMContentLoaded', renderWelcome);
+  </script>
+
+</body>
 </html>

@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!--
-    Cormorant Garamond  — display / headings (editorial, historical feel)
+    Cormorant Garamond — display / headings (editorial, historical feel)
     Inter               — body / UI (clean, legible at small sizes)
   -->
   <link
@@ -39,13 +39,22 @@
         Біблія ў Беларусі
       </a>
 
-      <!-- Controls: theme toggle + language switcher -->
-      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <!--
+        Controls: theme toggle + language switcher.
+        Previously used an inline style="display:flex…" — now a proper
+        CSS class (.site-header__controls) defined in style.css.
+      -->
+      <div class="site-header__controls">
 
+        <!--
+          Theme button initial icon is 🌙 (switch TO dark) because the
+          default theme is 'light'. applyTheme() in app.js will update
+          this immediately on DOMContentLoaded when a saved preference
+          exists, but starting with the correct default prevents any flash.
+        -->
         <button class="theme-btn" id="js-theme-btn"
-                aria-label="Switch to dark theme" title="Toggle theme">
-          <!-- icon swapped by JS -->
-          ☀️
+                aria-label="Toggle theme" title="Toggle theme">
+          🌙
         </button>
 
         <nav class="lang-switcher" aria-label="Language / Мова / Язык">
@@ -64,6 +73,10 @@
     Every view (home / section / object) renders exclusively into #app.
     Audio in the footer is NOT inside #app and therefore survives
     all view transitions without interruption.
+
+    tabindex="-1" enables programmatic focus after each route change
+    (router.js calls app.focus()) without adding #app to the natural
+    tab order.
   -->
   <main id="app" tabindex="-1" role="main">
     <!-- Populated entirely by JS views -->

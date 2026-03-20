@@ -6,55 +6,56 @@
  * Renders:
  *   1. Breadcrumb nav (All Sections → Section N)
  *   2. Exhibit title + provenance/date (loc.info)
- *   3. Images — all images stacked vertically in the media box
+ *   3. Images — all display images stacked in the media box
  *   4. Audio play button (only when obj.audio is non-empty)
- *   5. Description text (HTML trusted from the content team)
+ *   5. Description text (HTML trusted from content team)
  *   6. Prev / Next navigation within the section
  *
- * Data quirks handled:
- *   • obj.id is sometimes a string ("1A", "intro_1") and sometimes a
- *     number (31). All comparisons use String().
- *   • img is always an array.  _ico.webp entries are thumbnails only —
- *     they are stripped before rendering — _ico entries are thumbnails only.
- *   • obj.audio is a bare filename (e.g. "track-5.mp3") or an empty
- *     string.  We prepend "assets/audio/" here.
- *   • Section 0 is the Preface: one object, id="0". Its back link
- *     goes to the home page, not to a section listing.
+ * Improvements over previous version:
+ *   • Accepts routeId; checks isCurrentRoute() after each await so a
+ *     rapid navigation cannot overwrite a newer view with stale content.
+ *   • Spinner skipped when the section data is already in cache —
+ *     back-navigating to a visited object is now instant.
+ *   • 'use strict' removed — redundant in ES modules.
  *
- * Audio:
- *   Clicking the trigger button calls player.load(), which resumes
- *   from the current position if the same src is already buffered.
- *   Audio is NEVER auto-played (WCAG 1.4.2).
- *   The button's visual state (play ↔ pause icon) is managed by
- *   toggling the CSS class .is-playing — no DOM hidden attribute.
+ * Data quirks handled (unchanged):
+ *   • obj.id is sometimes a string ("1A") and sometimes a number (31).
+ *     All comparisons use String().
+ *   • img is always an array; _ico.webp entries are thumbnails only.
+ *   • obj.audio is a bare filename or empty string.
+ *   • Section 0 is the Preface: back link goes to home, not section list.
  */
 
-'use strict';
-
-import { getLang, T }               from '../store.js';
+import { getLang, T, getCachedSection }    from '../store.js';
 import { getApp, setLoading, setError,
          fetchSection, buildImages,
-         splitImages } from '../app.js';
+         splitImages }                     from '../app.js';
 import { load as playerLoad,
          toggle as playerToggle,
-         isPlaying, currentSrc }    from '../player.js';
+         isPlaying, currentSrc }           from '../player.js';
+import { isCurrentRoute }                  from '../router.js';
 
 // ─── Public ────────────────────────────────────────────────────────
 
 /**
  * @param {string} sectionId  e.g. "3"
  * @param {string} objectId   e.g. "21" or "1A" or "intro_1"
+ * @param {number} routeId    Claimed by the router; stale-render guard.
  */
-export async function renderObject(sectionId, objectId) {
+export async function renderObject(sectionId, objectId, routeId) {
   const lang = getLang();
   const t    = T[lang];
 
   document.title = t.siteTitle;
-  setLoading();
+
+  // Avoid spinner flash when the section data is already cached
+  if (!getCachedSection(sectionId, lang)) setLoading();
 
   try {
     const objects = await fetchSection(sectionId, lang);
-    const idx     = objects.findIndex(o => String(o.id) === String(objectId));
+    if (!isCurrentRoute(routeId)) return;   // navigation moved on — bail
+
+    const idx = objects.findIndex(o => String(o.id) === String(objectId));
 
     if (idx === -1) {
       getApp().innerHTML = `
@@ -75,7 +76,9 @@ export async function renderObject(sectionId, objectId) {
 
   } catch (err) {
     console.error('[objectView]', err);
-    setError(t.errorLoad, () => renderObject(sectionId, objectId));
+    if (isCurrentRoute(routeId)) {
+      setError(t.errorLoad, () => renderObject(sectionId, objectId, routeId));
+    }
   }
 }
 
@@ -141,7 +144,7 @@ function _paint(obj, prev, next, sectionId, lang, t) {
 
     </div>`;
 
-  // Post-render wiring
+  // Post-render wiring (must run after innerHTML write)
   if (audioSrc) _wireAudioBtn(audioSrc, loc.title, t);
 }
 
@@ -168,17 +171,12 @@ function _navBtn(obj, sectionId, lang, dir, t) {
 /**
  * Build the audio trigger button HTML.
  *
- * The button uses .is-playing class to switch between play/pause icons
- * via CSS — matching the approach used in the footer player bar.
- * This makes the initial state correct if the user navigated away and
- * back while the same track was already playing.
- *
- * @param {string} src
- * @param {string} title
- * @param {object} t
+ * The .is-playing class controls icon visibility via CSS, matching the
+ * approach used in the footer player bar. Initial state is determined
+ * by checking whether this exact track is already playing — so
+ * navigating away and back keeps the button in sync.
  */
 function _audioBtn(src, title, t) {
-  // Determine initial state: is this track already playing?
   const playing = isPlaying() && currentSrc().endsWith(src);
   const label   = playing ? t.pauseAudio : t.playAudio;
 
@@ -204,11 +202,7 @@ function _audioBtn(src, title, t) {
 
 /**
  * Attach the click handler to the audio trigger button.
- * Must be called after the HTML is in the DOM.
- *
- * @param {string} src
- * @param {string} title
- * @param {object} t
+ * Must be called after the HTML has been written to the DOM.
  */
 function _wireAudioBtn(src, title, t) {
   const btn = document.getElementById('js-audio-btn');
@@ -219,13 +213,13 @@ function _wireAudioBtn(src, title, t) {
     const playing = isPlaying() && currentSrc().endsWith(src);
 
     if (playing) {
-      playerToggle();                             // pause
+      playerToggle();
       btn.classList.remove('is-playing');
       btn.setAttribute('aria-pressed', 'false');
       btn.setAttribute('aria-label', t.playAudio);
       btn.querySelector('.audio-trigger__label').textContent = t.playAudio;
     } else {
-      playerLoad(src, title);                     // play (or resume)
+      playerLoad(src, title);
       btn.classList.add('is-playing');
       btn.setAttribute('aria-pressed', 'true');
       btn.setAttribute('aria-label', t.pauseAudio);
