@@ -2,29 +2,15 @@
  * sectionView.js — Section listing page
  *
  * Route: index.html?section=N
- *
- * Data conventions in the real JSON files:
- *   • Every section-N.json starts with exactly one "intro" object.
- *     Its id is "intro_N" (sections 1–5) or "0" (section 0).
- *     This intro is rendered as the section header, not as an exhibit card.
- *   • Remaining objects are the actual exhibits — id can be a string
- *     ("1A", "1B") or a number (2, 3 …).
- *   • Some objects have a _ico.webp image as the first entry in img[]:
- *     this is the list thumbnail; the full image(s) follow.
- *   • loc.info holds a date/provenance line (may be empty string).
- *
- * The intro text for section 5 is very long (~3000 chars). A
- * "read more / read less" toggle is added when it exceeds 600 chars.
  */
 
 'use strict';
 
 import { getLang, T }                from '../store.js';
 import { getApp, setLoading, setError,
-         fetchSection, buildPicture,
+         fetchSections, fetchSection, buildPicture,
          splitImages }               from '../app.js';
 
-// Characters before "read more" clamp kicks in
 const INTRO_CLAMP = 600;
 
 // ─── Public ────────────────────────────────────────────────────────
@@ -38,8 +24,11 @@ export async function renderSection(sectionId) {
   setLoading();
 
   try {
-    const objects = await fetchSection(sectionId, lang);
-    _paint(objects, sectionId, lang, t);
+    const [objects, allSections] = await Promise.all([
+      fetchSection(sectionId, lang),
+      fetchSections(),
+    ]);
+    _paint(objects, sectionId, allSections, lang, t);
   } catch (err) {
     console.error('[sectionView]', err);
     setError(t.errorLoad, () => renderSection(sectionId));
@@ -48,29 +37,29 @@ export async function renderSection(sectionId) {
 
 // ─── Private ───────────────────────────────────────────────────────
 
-function _paint(objects, sectionId, lang, t) {
+function _paint(objects, sectionId, allSections, lang, t) {
   if (!objects.length) {
     getApp().innerHTML = `<div class="view"><p class="notice">${t.noObjects}</p></div>`;
     return;
   }
 
-  // First object is always the intro
   const intro    = objects[0];
   const exhibits = objects.slice(1);
   const loc      = intro[lang] ?? intro.be;
 
   document.title = `${loc.title} — ${t.siteTitle}`;
 
-  // Build intro text with optional read-more toggle
-  const rawText  = loc.text || '';
+  const rawText     = loc.text || '';
   const needsToggle = rawText.length > INTRO_CLAMP;
-  const introText = needsToggle
+  const introText   = needsToggle
     ? _collapsibleText(rawText, t)
     : rawText ? `<div class="section-intro__text prose">${rawText}</div>` : '';
 
   const cardsHTML = exhibits.length
     ? `<ul class="object-grid" role="list">${exhibits.map(o => _card(o, sectionId, lang, t)).join('')}</ul>`
     : `<p class="notice">${t.noObjects}</p>`;
+
+  const navHTML = _sectionNav(allSections, Number(sectionId), lang, t);
 
   getApp().innerHTML = `
     <div class="view view--section">
@@ -82,16 +71,59 @@ function _paint(objects, sectionId, lang, t) {
         ${introText}
       </header>
       ${cardsHTML}
+      ${navHTML}
     </div>`;
 
-  // Wire the read-more toggle if it was rendered
   if (needsToggle) _wireToggle(t);
 }
 
 /**
- * Wrap a long text in a collapsible container.
- * The collapsed state shows the first INTRO_CLAMP characters.
+ * Prev / Home / Next navigation bar — mirrors obj-nav in objectView.
+ * Only sections with id > 0 are included in the sequence (0 = Preface).
  */
+function _sectionNav(allSections, currentId, lang, t) {
+  const seq = allSections.filter(s => s.id > 0);
+  const idx = seq.findIndex(s => s.id === currentId);
+
+  // Section 0 (Preface) gets only a "back to all" link — no prev/next
+  if (idx === -1) {
+    return `
+      <nav class="obj-nav" aria-label="Section navigation">
+        <span></span>
+        <a class="obj-nav__back" href="index.html">← ${t.allSections}</a>
+        <span></span>
+      </nav>`;
+  }
+
+  const prev = idx > 0             ? seq[idx - 1] : null;
+  const next = idx < seq.length - 1 ? seq[idx + 1] : null;
+
+  const prevHTML = prev
+    ? `<a class="obj-nav__btn obj-nav__btn--prev"
+          href="index.html?section=${prev.id}"
+          aria-label="${t.prevSection}: ${prev.title[lang] ?? prev.title.be}">
+         <span class="obj-nav__arrow">‹</span>
+         <span class="obj-nav__label">${prev.title[lang] ?? prev.title.be}</span>
+       </a>`
+    : '<span></span>';
+
+  const nextHTML = next
+    ? `<a class="obj-nav__btn obj-nav__btn--next"
+          href="index.html?section=${next.id}"
+          aria-label="${t.nextSection}: ${next.title[lang] ?? next.title.be}">
+         <span class="obj-nav__label">${next.title[lang] ?? next.title.be}</span>
+         <span class="obj-nav__arrow">›</span>
+       </a>`
+    : '<span></span>';
+
+  return `
+    <nav class="obj-nav" aria-label="Section navigation">
+      ${prevHTML}
+      <a class="obj-nav__back" href="index.html">← ${t.allSections}</a>
+      ${nextHTML}
+    </nav>`;
+}
+
 function _collapsibleText(html, t) {
   return `
     <div class="section-intro__text prose collapsible" data-collapsible>
@@ -101,7 +133,6 @@ function _collapsibleText(html, t) {
     </div>`;
 }
 
-/** Attach the expand/collapse handler after HTML is in the DOM. */
 function _wireToggle(t) {
   const wrap   = getApp().querySelector('[data-collapsible]');
   const toggle = wrap?.querySelector('[data-toggle]');
@@ -115,13 +146,6 @@ function _wireToggle(t) {
   });
 }
 
-/**
- * Build one exhibit card in the list.
- * @param {object} obj
- * @param {string} sectionId
- * @param {string} lang
- * @param {object} t
- */
 function _card(obj, sectionId, lang, t) {
   const loc  = obj[lang] ?? obj.be;
   const href = `index.html?section=${sectionId}&id=${obj.id}`;

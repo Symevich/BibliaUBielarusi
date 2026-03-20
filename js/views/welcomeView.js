@@ -12,6 +12,39 @@
 
 import { getLang, setLang, T, LOCALES } from '../store.js';
 
+const THEME_KEY = 'theme';
+
+
+// ─── Theme ─────────────────────────────────────────────────────────
+
+function _applyTheme() {
+  const saved = localStorage.getItem(THEME_KEY) || 'light';
+  document.documentElement.dataset.theme = saved;
+  _syncThemeBtn(saved);
+}
+
+function _toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem(THEME_KEY, next);
+  _syncThemeBtn(next);
+}
+
+function _syncThemeBtn(theme) {
+  const btn = document.getElementById('js-theme-btn');
+  if (!btn) return;
+  const t = T[getLang()];
+  if (theme === 'dark') {
+    btn.textContent = '☀️';
+    btn.setAttribute('aria-label', t.themeLight || 'Light theme');
+    btn.title       = t.themeLight || 'Light theme';
+  } else {
+    btn.textContent = '🌙';
+    btn.setAttribute('aria-label', t.themeDark || 'Dark theme');
+    btn.title       = t.themeDark || 'Dark theme';
+  }
+}
+
 // ─── Public ────────────────────────────────────────────────────────
 
 export function renderWelcome() {
@@ -21,9 +54,12 @@ export function renderWelcome() {
   document.title                = t.siteTitle;
   document.documentElement.lang = lang;
 
+  _applyTheme();
   _paint(t);
   _syncLangUI();
   _initLangSwitcher();
+  document.getElementById('js-theme-btn')
+    ?.addEventListener('click', _toggleTheme);
 }
 
 // ─── Private ───────────────────────────────────────────────────────

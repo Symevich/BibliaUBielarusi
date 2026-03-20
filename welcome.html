@@ -32,15 +32,24 @@
     Language buttons call renderWelcome() after persisting the new locale
     so the welcome text updates in place without a page reload.
   -->
-    <header class="site-header" role="banner">
-      <div class="site-header__inner">
+  <header class="site-header" role="banner">
+    <div class="site-header__inner">
 
-        <!-- Logo — plain text on welcome page, no SPA navigation needed -->
-        <span class="site-header__logo" aria-label="Біблія ў Беларусі — галоўная">
-          Біблія ў Беларусі
-        </span>
+      <!-- Logo / home link — SPA-navigates, never reloads -->
+      <a class="site-header__logo" href="index.html"
+         aria-label="Біблія ў Беларусі — галоўная">
+        Біблія ў Беларусі
+      </a>
 
-        <!-- Language switcher -->
+      <!-- Controls: theme toggle + language switcher -->
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+
+        <button class="theme-btn" id="js-theme-btn"
+                aria-label="Switch to dark theme" title="Toggle theme">
+          <!-- icon swapped by JS -->
+          ☀️
+        </button>
+
         <nav class="lang-switcher" aria-label="Language / Мова / Язык">
           <button class="lang-btn" data-lang="be" aria-pressed="true">BE</button>
           <button class="lang-btn" data-lang="ru" aria-pressed="false">RU</button>
@@ -48,7 +57,9 @@
         </nav>
 
       </div>
-    </header>
+
+    </div>
+  </header>
 
     <!-- ─── Welcome view renders here ────────────────────────────── -->
     <main id="app" tabindex="-1" role="main">
