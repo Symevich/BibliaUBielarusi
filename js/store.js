@@ -90,6 +90,8 @@ export const T = {
     themeLight:   'Светлая тэма',
     prevSection:  'Папярэдні раздзел',
     nextSection:  'Наступны раздзел',
+    muteAudio:    'Выключыць гук',
+    unmuteAudio:  'Уключыць гук',
   },
   ru: {
     siteTitle:    'Библия в Беларуси',
@@ -117,6 +119,8 @@ export const T = {
     themeLight:   'Светлая тема',
     prevSection:  'Предыдущий раздел',
     nextSection:  'Следующий раздел',
+    muteAudio:    'Отключить звук',
+    unmuteAudio:  'Включить звук',
   },
   en: {
     siteTitle:    'Bible in Belarus',
@@ -144,5 +148,7 @@ export const T = {
     themeLight:   'Light theme',
     prevSection:  'Previous section',
     nextSection:  'Next section',
+    muteAudio:    'Mute',
+    unmuteAudio:  'Unmute',
   },
 };

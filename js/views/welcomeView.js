@@ -14,6 +14,11 @@
 import { getLang, setLang, T, LOCALES }   from '../store.js';
 import { applyTheme, toggleTheme }        from '../utils/theme.js';
 
+// One-time wiring guards — prevents duplicate listeners when
+// renderWelcome() is called again on every language switch.
+let _langWired   = false;
+let _themeWired  = false;
+
 // ─── Public ────────────────────────────────────────────────────────
 
 export function renderWelcome() {
@@ -26,9 +31,8 @@ export function renderWelcome() {
   applyTheme();       // restore persisted theme immediately (no flash)
   _paint(t);
   _syncLangUI();
-  _initLangSwitcher();
-  document.getElementById('js-theme-btn')
-    ?.addEventListener('click', toggleTheme);
+  _initLangSwitcher();   // no-op after first call
+  _initThemeBtn();       // no-op after first call
 }
 
 // ─── Private ───────────────────────────────────────────────────────
@@ -60,8 +64,10 @@ function _syncLangUI() {
   document.documentElement.lang = lang;
 }
 
-/** Wire language buttons so switching re-renders the page in the new locale. */
+/** Wire language buttons once — re-calling after the first time is a no-op. */
 function _initLangSwitcher() {
+  if (_langWired) return;
+  _langWired = true;
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const next = btn.dataset.lang;
@@ -71,4 +77,12 @@ function _initLangSwitcher() {
       renderWelcome();
     });
   });
+}
+
+/** Wire the theme toggle once — re-calling after the first time is a no-op. */
+function _initThemeBtn() {
+  if (_themeWired) return;
+  _themeWired = true;
+  document.getElementById('js-theme-btn')
+    ?.addEventListener('click', toggleTheme);
 }

@@ -27,8 +27,9 @@
 
   <!-- ─── Persistent site header ───────────────────────────────── -->
   <!--
-    The header never re-renders. Language buttons here call
-    app.switchLanguage() which re-routes the current view in the new locale.
+    The header never re-renders. Language button clicks are handled by
+    initLangSwitcher() in app.js, which persists the new locale and
+    re-routes the current view.
   -->
   <header class="site-header" role="banner">
     <div class="site-header__inner">

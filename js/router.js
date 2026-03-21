@@ -72,25 +72,24 @@ export async function route() {
   if (section !== null && id !== null) {
     const { renderObject } = await import('./views/objectView.js');
     if (!isCurrentRoute(myId)) return;
-    renderObject(section, id, myId);
+    await renderObject(section, id, myId);
 
   } else if (section !== null) {
     const { renderSection } = await import('./views/sectionView.js');
     if (!isCurrentRoute(myId)) return;
-    renderSection(section, myId);
+    await renderSection(section, myId);
 
   } else {
     const { renderHome } = await import('./views/homeView.js');
     if (!isCurrentRoute(myId)) return;
-    renderHome(myId);
+    await renderHome(myId);
   }
 
-  // Move keyboard focus into #app so AT users land at new content.
-  // requestAnimationFrame defers until the view has written its HTML.
-  requestAnimationFrame(() => {
-    const app = document.getElementById('app');
-    if (app) app.focus();
-  });
+  // Focus moves AFTER the view has finished writing its HTML.
+  // Only focus if this route is still the current one (no race).
+  if (isCurrentRoute(myId)) {
+    document.getElementById('app')?.focus();
+  }
 }
 
 // ─── Init ──────────────────────────────────────────────────────────
