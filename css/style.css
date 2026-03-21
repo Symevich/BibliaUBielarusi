@@ -821,7 +821,7 @@ body {
   flex-direction: row;
   gap: 10px;
   width: 100%;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
 }
 
